@@ -86,27 +86,63 @@ function scrollToBottom() {
   output.scrollTop = output.scrollHeight;
 }
 
-function printLines(lines, delayed = false) {
+function printLines(lines, charDelay = 0) {
   const queue = Array.isArray(lines) ? lines : [lines];
-  if (!delayed || queue.length === 0) {
+
+  // If no delay (or <= 0), just dump everything instantly like before
+  if (!charDelay || charDelay <= 0) {
     queue.forEach((line) => appendLine(line));
     scrollToBottom();
     return Promise.resolve();
   }
 
   return new Promise((resolve) => {
-    let idx = 0;
-    const tick = () => {
-      appendLine(queue[idx]);
-      scrollToBottom();
-      idx += 1;
-      if (idx < queue.length) {
-        setTimeout(tick, 35);
-      } else {
+    let lineIndex = 0;
+    let charIndex = 0;
+    let currentLineEl = null;
+
+    const typeNextChar = () => {
+      // Done with all lines
+      if (lineIndex >= queue.length) {
+        scrollToBottom();
         resolve();
+        return;
       }
+
+      const line = queue[lineIndex];
+
+      // Start a new line element if needed
+      if (!currentLineEl) {
+        currentLineEl = document.createElement("div");
+        currentLineEl.className = "line";
+        output.appendChild(currentLineEl);
+      }
+
+      // If this line is empty, just move on to next
+      if (line.length === 0) {
+        lineIndex += 1;
+        charIndex = 0;
+        currentLineEl = null;
+        setTimeout(typeNextChar, charDelay);
+        return;
+      }
+
+      // Append next character
+      currentLineEl.textContent += line[charIndex];
+      charIndex += 1;
+      scrollToBottom();
+
+      // End of this line → move to the next
+      if (charIndex >= line.length) {
+        lineIndex += 1;
+        charIndex = 0;
+        currentLineEl = null;
+      }
+
+      setTimeout(typeNextChar, charDelay);
     };
-    tick();
+
+    typeNextChar();
   });
 }
 
@@ -127,11 +163,11 @@ function closePanel() {
   currentSection = null;
 }
 
-async function logAndRespond(raw, responseLines, delayed = false) {
+async function logAndRespond(raw, responseLines, charDelay = 10) {
+  // Echo the command instantly (feels more like a real terminal)
   appendLine(`${promptText} ${raw}`);
-  await printLines(responseLines, delayed);
+  await printLines(responseLines, charDelay);
 }
-
 async function handleCommand(rawInput) {
   const command = rawInput.trim();
 
@@ -149,24 +185,20 @@ async function handleCommand(rawInput) {
       appendLine(`${promptText} ${rawInput}`);
       break;
     case "help":
-      await logAndRespond(
-        rawInput,
-        [
-          "Available commands:",
-          "  help               - show this help menu",
-          "  ls                 - list available sections",
-          "  cd <section>       - open a section (about, projects, contact, history)",
-          "  cd ..  or  cd /    - return to root",
-          "  clear              - clear the terminal",
-          "  press ↑ / ↓        - navigate prompt history",
-          "  sudo hire rylen    - hire Rylen (if you have permission)",
-          "",
-          "Examples:",
-          "  cd projects",
-          "  cd ..",
-        ],
-        true
-      );
+      await logAndRespond(rawInput, [
+        "Available commands:",
+        "  help               - show this help menu",
+        "  ls                 - list available sections",
+        "  cd <section>       - open a section (about, projects, contact, history)",
+        "  cd ..  or  cd /    - return to root",
+        "  clear              - clear the terminal",
+        "  press ↑ / ↓        - navigate prompt history",
+        "  sudo hire rylen    - hire Rylen (if you have permission)",
+        "",
+        "Examples:",
+        "  cd projects",
+        "  cd ..",
+      ]);
       break;
     case "ls":
       await logAndRespond(rawInput, [lsOutput]);
@@ -189,7 +221,7 @@ async function handleCommand(rawInput) {
         break;
       }
       showPanel(target);
-      await logAndRespond(rawInput, [`navigated to /${target}`], true);
+      await logAndRespond(rawInput, [`navigated to /${target}`]);
       break;
     }
     case "sudo hire rylen":
@@ -231,7 +263,7 @@ function handleHistoryNavigation(key) {
 
 function boot() {
   input.focus();
-  printLines(welcome, true);
+  printLines(welcome, 25);
 }
 
 input.addEventListener("keydown", (event) => {
