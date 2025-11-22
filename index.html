@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rylen | Terminal Portfolio</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="layout">
+    <section class="terminal" aria-label="Terminal window">
+      <div class="terminal-title">sudo_hire_rylen // interactive shell</div>
+      <div id="output" class="output" aria-live="polite"></div>
+      <div class="input-row">
+        <span class="prompt" aria-hidden="true">[hiringagent@sudo_hire_rylen ~]$</span>
+        <input id="cmdInput" type="text" spellcheck="false" autocomplete="off" aria-label="Type a command" />
+      </div>
+    </section>
+
+    <section id="panel" class="panel hidden" aria-live="polite" aria-label="Content panel"></section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
