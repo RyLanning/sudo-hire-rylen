@@ -19,6 +19,11 @@ const themes = {
   ice: { bg: "#001018", text: "#a8ffff", prompt: "#6671efff" },
   light: { bg: "#f5f5f5", text: "#111111", prompt: "#000000" },
 };
+const history = [];
+let historyIndex = -1;
+let currentSection = null;
+let snakeGame = null;
+let mazeState = null;
 
 const sections = {
   about: `
@@ -97,12 +102,6 @@ const sections = {
     </div>
   `,
 };
-
-const history = [];
-let historyIndex = -1;
-let currentSection = null;
-let snakeGame = null;
-let mazeState = null;
 
 const welcome = [
   "booting portfolio shell...",
