@@ -4,17 +4,17 @@ const panel = document.getElementById("panel");
 const promptText = "[hiringagent@sudo_hire_rylen ~]$";
 let activeTypeJob = null;
 const themes = {
-  matrix: { bg: "#000000", text: "#00ff66" },
-  amber: { bg: "#000000", text: "#ffbf00" },
-  ice: { bg: "#001018", text: "#a8ffff" },
-  light: { bg: "#f5f5f5", text: "#111111" },
+  matrix: { bg: "#000000", text: "#00ff66", prompt: "#47b272ff" },
+  amber: { bg: "#000000", text: "#ffbf00", prompt: "#ff8000" },
+  ice: { bg: "#001018", text: "#a8ffff", prompt: "#66d9ef" },
+  light: { bg: "#f5f5f5", text: "#111111", prompt: "#000000" },
 };
 
 const sections = {
   about: `
-    <p>Hi, I'm Rylen — a front-end engineer who likes turning ideas into tactile, fast UIs. I enjoy building deliberate, playful interfaces that still feel professional.</p>
-    <p>Currently exploring web animation, design systems, and ways to make developer tooling feel friendlier.</p>
+    <p>Hi, I'm Rylen! TODO: ADD MORE ABOUT ME</p>
     <div class="skills">
+      <span class="pill">TODO: UPDATE/ADD SKILLS</span>
       <span class="pill">JavaScript</span>
       <span class="pill">TypeScript</span>
       <span class="pill">CSS / Animations</span>
@@ -28,37 +28,28 @@ const sections = {
   projects: `
     <div class="project-grid">
       <div class="project-card">
-        <strong>Signal Board</strong>
-        <p>Real-time status wall for ops teams with keyboard-driven controls and ambient sounds.</p>
-        <a href="#" aria-label="View Signal Board project">view placeholder link</a>
-      </div>
-      <div class="project-card">
-        <strong>Palette Play</strong>
-        <p>Browser-based color lab that generates palettes, exports tokens, and previews UI states.</p>
-        <a href="#" aria-label="View Palette Play project">view placeholder link</a>
-      </div>
-      <div class="project-card">
-        <strong>Waypoint Docs</strong>
-        <p>Minimal docs theme with fuzzy search, code tabs, and a built-in changelog feed.</p>
-        <a href="#" aria-label="View Waypoint Docs project">view placeholder link</a>
+        <strong>TODO: ADD PROJECT TITLE</strong>
+        <p>TODO: ADD PROJECT DESCRIPTION</p>
+        <a href="#" aria-label="TODO: ADD PROJECT LINK">TODO: ADD PROJECT LINK</a>
       </div>
     </div>
   `,
   contact: `
     <p>Always happy to chat about collaborations, UI ideas, or cool developer tools.</p>
     <div class="contact-links">
-      <div class="contact-link"><a href="mailto:rylen@example.com">✉️ rylen@example.com</a></div>
-      <div class="contact-link"><a href="https://github.com/" target="_blank" rel="noreferrer noopener">🐙 GitHub</a></div>
-      <div class="contact-link"><a href="https://www.linkedin.com/" target="_blank" rel="noreferrer noopener">💼 LinkedIn</a></div>
-      <div class="contact-link"><a href="#" aria-label="Portfolio link placeholder">🖥️ Portfolio placeholder</a></div>
+      <div class="contact-link"><a href="mailto:rylen.lanning@gmail.com">✉️ rylen.lanning@gmail.com</a></div>
+      <div class="contact-link"><a href="#" target="_blank" rel="noreferrer noopener">TODO: UPDATE BELOW LINKS</a></div>
+      <div class="contact-link"><a href="https://github.com/" target="_blank" rel="noreferrer noopener">GitHub</a></div>
+      <div class="contact-link"><a href="https://www.linkedin.com/" target="_blank" rel="noreferrer noopener">LinkedIn</a></div>
     </div>
   `,
   history: `
     <div class="timeline">
-      <div class="timeline-item"><strong>2024 — Present</strong><br/>Senior Front-end Engineer crafting dashboards & design system utilities.</div>
-      <div class="timeline-item"><strong>2022 — 2024</strong><br/>Built interactive data visualizations and performance-focused UI tooling.</div>
-      <div class="timeline-item"><strong>2020 — 2022</strong><br/>Shipped marketing sites & product UI experiments for early-stage teams.</div>
-      <div class="timeline-item"><strong>2018 — 2020</strong><br/>Learned the ropes with HTML/CSS/JS freelancing and open-source tinkering.</div>
+      <div class="timeline-item"><strong>2000 - 2000</strong><br/>TODO: ADD HISTORY</div>
+      <div class="timeline-item"><strong>2000 - 2000</strong><br/>TODO: ADD HISTORY</div>
+      <div class="timeline-item"><strong>2000 - 2000</strong><br/>TODO: ADD HISTORY</div>
+      <div class="timeline-item"><strong>2000 - 2000</strong><br/>TODO: ADD HISTORY</div>
+      <div class="timeline-item"><strong>2000 - 2000</strong><br/>TODO: ADD HISTORY</div>
     </div>
   `,
 };
@@ -72,9 +63,10 @@ const welcome = [
   'type "help" to see available commands.',
 ];
 
-function applyTheme(bg, text) {
+function applyTheme(bg, text, prompt) {
   document.documentElement.style.setProperty("--bg-color", bg);
   document.documentElement.style.setProperty("--text-color", text);
+  document.documentElement.style.setProperty("--prompt-color", prompt);
 }
 
 function isHexColor(str) {
@@ -275,15 +267,32 @@ async function handleCommand(rawInput) {
       await printLines(
         [
           "Available commands:",
-          "  help                   - show this help menu",
-          "  ls                     - list available sections",
-          "  <name> or <name>.exe   - execute a section (about, projects, contact, history)",
-          "  theme list             - list available color themes",
-          "  theme randomhex        - apply a random color theme for bg and text",
-          "  theme <name>           - apply a named theme",
-          "  theme <bg> <text>      - apply custom hex colors",
-          "  clear                  - clear the terminal",
-          "  press ↑ / ↓            - navigate prompt history",
+          "help",
+          "    show this help menu",
+          "",
+          "ls",
+          "    list available sections",
+          "",
+          "<name> or <name>.exe",
+          "    execute a section (about, projects, contact, history)",
+          "",
+          "theme list",
+          "    list available color themes",
+          "",
+          "theme randomhex",
+          "    apply a random color theme for bg and text",
+          "",
+          "theme <name>",
+          "    apply a named theme",
+          "",
+          "theme <bg> <text> <prompt>",
+          "    apply custom hex colors",
+          "",
+          "clear",
+          "    clear the terminal",
+          "",
+          "press ↑ / ↓",
+          "    navigate prompt history",
           "",
         ],
         15
@@ -311,9 +320,12 @@ async function handleCommand(rawInput) {
         };
         const bgHex = randomHex();
         const textHex = randomHex();
-        applyTheme(bgHex, textHex);
+        const promptHex = randomHex();
+        applyTheme(bgHex, textHex, promptHex);
         await printLines(
-          [`applied random theme: bg=${bgHex}, text=${textHex}`],
+          [
+            `applied random theme: bg=${bgHex}, text=${textHex}, prompt=${promptHex}`,
+          ],
           12
         );
         break;
@@ -323,7 +335,7 @@ async function handleCommand(rawInput) {
         const name = args[0].toLowerCase();
         const selected = themes[name];
         if (selected) {
-          applyTheme(selected.bg, selected.text);
+          applyTheme(selected.bg, selected.text, selected.prompt);
           await printLines([`applied theme: ${name}`], 12);
         } else {
           await printLines(
@@ -332,7 +344,7 @@ async function handleCommand(rawInput) {
               "use: theme list",
               "or:  theme randomhex",
               "or:  theme <name>",
-              "or:  theme <bg-hex> <text-hex>",
+              "or:  theme <bg-hex> <text-hex> <prompt-hex>",
             ],
             12
           );
@@ -343,7 +355,7 @@ async function handleCommand(rawInput) {
       if (args.length === 2) {
         const [bgHex, textHex] = args;
         if (isHexColor(bgHex) && isHexColor(textHex)) {
-          applyTheme(bgHex, textHex);
+          applyTheme(bgHex, textHex, textHex);
           await printLines(
             [`applied custom theme: bg=${bgHex}, text=${textHex}`],
             12
