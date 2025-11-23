@@ -306,3 +306,16 @@ input:focus-visible {
   white-space: pre;
   line-height: 1.1;
 }
+
+.maze-output {
+  font-family: var(--font);
+  white-space: pre;
+  margin: 0.5rem 0;
+  line-height: 0.65;
+  font-size: small;
+}
+
+.maze-note {
+  font-family: var(--font);
+  margin: 0.35rem 0;
+}

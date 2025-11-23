@@ -102,10 +102,43 @@ const history = [];
 let historyIndex = -1;
 let currentSection = null;
 let snakeGame = null;
+let mazeState = null;
 
 const welcome = [
   "booting portfolio shell...",
   'type "help" and hit enter to see available commands.',
+];
+
+const helpLinesArray = [
+  "Available commands:",
+  "   help",
+  "        show this help menu",
+  "",
+  "   ls",
+  "        list available sections",
+  "",
+  "   <name>  |  ./<name>  |  <name>.exe",
+  "        use any of the above to execute a section",
+  "",
+  "   theme list",
+  "        list available color themes",
+  "",
+  "   theme <name>",
+  "        apply a named theme",
+  "",
+  "   theme <bg> <text> <prompt>",
+  "        apply custom hex colors",
+  "   maze <size>",
+  "        generate & play an ASCII maze (size 10-50)",
+  "   snake",
+  "        play ASCII Snake!",
+  "",
+  "   clear",
+  "        clear the terminal",
+  "",
+  "   press ↑ / ↓",
+  "        navigate prompt history",
+  "",
 ];
 
 function applyTheme(bg, text, prompt) {
@@ -144,14 +177,14 @@ function scrollToBottom() {
 function printLines(lines, charDelay = 0) {
   const queue = Array.isArray(lines) ? lines : [lines];
 
-  // No delay: just dump everything
+  // if no delay just dump everything
   if (!charDelay || charDelay <= 0) {
     queue.forEach((line) => appendLine(line));
     scrollToBottom();
     return Promise.resolve();
   }
 
-  // Animated typing with interrupt support
+  // job state keeps track of typing progress and allows interruption with flush
   const job = {
     timer: null,
     finished: false,
@@ -160,7 +193,7 @@ function printLines(lines, charDelay = 0) {
     done: null,
   };
 
-  // This promise resolves when the job is completely finished
+  // resolve process when job is finished
   job.done = new Promise((resolve) => {
     job.finish = () => {
       if (job.finished) return;
@@ -184,7 +217,6 @@ function printLines(lines, charDelay = 0) {
   const flushRemaining = () => {
     if (job.finished) return;
 
-    // Finish current and remaining lines instantly
     while (lineIndex < queue.length) {
       const line = queue[lineIndex];
 
@@ -336,7 +368,7 @@ function endSnakeGame(result) {
 }
 
 function startSnakeGame() {
-  if (snakeGame) return snakeGame.promise; // prevent double start
+  if (snakeGame) return snakeGame.promise;
 
   input.disabled = true;
   input.blur();
@@ -393,7 +425,7 @@ function startSnakeGame() {
     };
     const next = dirs[key];
     if (!next) return;
-    // avoid reversing directly
+    // avoid reversing direction
     if (next.x === -state.dir.x && next.y === -state.dir.y) return;
     state.nextDir = next;
   };
@@ -470,6 +502,310 @@ function startSnakeGame() {
   return promise;
 }
 
+// --- Maze Game -------------------------------------------------------
+function generateMazeGrid(size) {
+  const rows = size;
+  const cols = size;
+  const gridHeight = rows * 2 + 1;
+  const gridWidth = cols * 2 + 1;
+  const grid = Array.from({ length: gridHeight }, () =>
+    Array.from({ length: gridWidth }, () => "■")
+  );
+
+  const visited = Array.from({ length: rows }, () =>
+    Array.from({ length: cols }, () => false)
+  );
+
+  const carve = (r, c) => {
+    visited[r][c] = true;
+    const gr = 2 * r + 1;
+    const gc = 2 * c + 1;
+    grid[gr][gc] = " ";
+
+    const neighbors = [
+      [r - 1, c],
+      [r + 1, c],
+      [r, c - 1],
+      [r, c + 1],
+    ].sort(() => Math.random() - 0.5);
+
+    for (const [nr, nc] of neighbors) {
+      if (nr < 0 || nr >= rows || nc < 0 || nc >= cols) continue;
+      if (visited[nr][nc]) continue;
+      const wallR = (gr + (2 * nr + 1)) / 2;
+      const wallC = (gc + (2 * nc + 1)) / 2;
+      grid[wallR][wallC] = " ";
+      carve(nr, nc);
+    }
+  };
+
+  carve(0, 0);
+
+  const startCell = { r: rows - 1, c: 0 };
+  const goalCell = { r: 0, c: cols - 1 };
+  grid[2 * startCell.r + 1][2 * startCell.c + 1] = " ";
+  grid[2 * goalCell.r + 1][2 * goalCell.c + 1] = " ";
+
+  return { grid, startCell, goalCell };
+}
+
+function renderMaze(state) {
+  const { baseGrid, player, goal, visitedCells, pathCells, gridEl } = state;
+  const rows = baseGrid.map((row) => row.slice());
+
+  if (visitedCells) {
+    visitedCells.forEach((key) => {
+      const [r, c] = key.split(",").map(Number);
+      rows[2 * r + 1][2 * c + 1] = "#";
+    });
+  }
+
+  if (pathCells) {
+    pathCells.forEach((key) => {
+      const [r, c] = key.split(",").map(Number);
+      rows[2 * r + 1][2 * c + 1] = "#";
+    });
+  }
+
+  rows[2 * goal.r + 1][2 * goal.c + 1] = "G";
+  rows[2 * player.r + 1][2 * player.c + 1] = "@";
+
+  const lines = rows.map((row) => row.join(""));
+  gridEl.textContent = lines.join("\n");
+  scrollToBottom();
+}
+
+function endMaze(reason) {
+  if (!mazeState) return;
+  const { keyHandler, container } = mazeState;
+  window.removeEventListener("keydown", keyHandler, true);
+  // if (container && container.parentNode === output) {
+  //   container.remove();
+  // }
+  mazeState = null;
+  input.disabled = false;
+  input.focus();
+
+  if (reason === "abort") {
+    appendLine("maze aborted.");
+  } else if (reason === "win") {
+    appendLine("maze completed!");
+  } else if (reason === "auto") {
+    appendLine("maze auto-solved.");
+  }
+}
+
+function startMaze(size) {
+  if (mazeState) {
+    appendLine("maze already running. Press ESC to quit current maze.");
+    return;
+  }
+
+  input.disabled = true;
+  input.blur();
+
+  const container = document.createElement("div");
+  const note = document.createElement("div");
+  note.className = "maze-note";
+  note.textContent =
+    "Use arrow keys to move. Press ESC to quit. Press 'S' to auto-solve.";
+  const gridEl = document.createElement("pre");
+  gridEl.className = "maze-output";
+  container.appendChild(note);
+  container.appendChild(gridEl);
+  output.appendChild(container);
+  scrollToBottom();
+
+  const { grid: baseGrid, startCell, goalCell } = generateMazeGrid(size);
+  const state = {
+    size,
+    baseGrid,
+    player: { ...startCell },
+    goal: { ...goalCell },
+    gridEl,
+    visitedCells: null,
+    pathCells: null,
+    solving: false,
+  };
+
+  const handleMazeKey = (event) => {
+    if (!mazeState) return;
+    const { key } = event;
+    if (
+      [
+        "ArrowUp",
+        "ArrowDown",
+        "ArrowLeft",
+        "ArrowRight",
+        "Escape",
+        "s",
+        "S",
+      ].includes(key)
+    ) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+
+    if (key === "Escape") {
+      endMaze("abort");
+      return;
+    }
+
+    if (key === "s" || key === "S") {
+      if (!state.solving) {
+        autoSolveMaze(state);
+      }
+      return;
+    }
+
+    const moves = {
+      ArrowUp: { r: -1, c: 0 },
+      ArrowDown: { r: 1, c: 0 },
+      ArrowLeft: { r: 0, c: -1 },
+      ArrowRight: { r: 0, c: 1 },
+    };
+    const delta = moves[key];
+    if (!delta) return;
+    if (state.solving) return;
+
+    const next = { r: state.player.r + delta.r, c: state.player.c + delta.c };
+
+    if (!canStep(state, state.player, next)) {
+      return;
+    }
+    state.player = next;
+    renderMaze(state);
+    if (next.r === state.goal.r && next.c === state.goal.c) {
+      endMaze("win");
+    }
+  };
+
+  mazeState = { state, container, keyHandler: handleMazeKey };
+  window.addEventListener("keydown", handleMazeKey, true);
+
+  renderMaze(state);
+}
+
+function canStep(state, from, to) {
+  const { size, baseGrid } = state;
+  const { r, c } = to;
+
+  // bounds check in logical cell space
+  if (r < 0 || r >= size || c < 0 || c >= size) return false;
+
+  // convert logical cells to grid coords
+  const fromGr = 2 * from.r + 1;
+  const fromGc = 2 * from.c + 1;
+  const toGr = 2 * to.r + 1;
+  const toGc = 2 * to.c + 1;
+
+  // find the wall cell between them
+  const wallR = (fromGr + toGr) / 2;
+  const wallC = (fromGc + toGc) / 2;
+
+  // destination center must be open
+  if (baseGrid[toGr][toGc] !== " ") return false;
+
+  // and the wall between must also be open
+  if (baseGrid[wallR][wallC] !== " ") return false;
+
+  return true;
+}
+
+function autoSolveMaze(state) {
+  state.solving = true;
+  const startKey = `${state.player.r},${state.player.c}`;
+  const goalKey = `${state.goal.r},${state.goal.c}`;
+
+  const open = new Map();
+  const fScore = new Map();
+  const gScore = new Map();
+  const cameFrom = new Map();
+  const visited = new Set();
+  const neighbors = [
+    [-1, 0],
+    [1, 0],
+    [0, -1],
+    [0, 1],
+  ];
+
+  const heuristic = (r, c) =>
+    Math.abs(r - state.goal.r) + Math.abs(c - state.goal.c);
+
+  const setScores = (key, g, f) => {
+    gScore.set(key, g);
+    fScore.set(key, f);
+    open.set(key, { g, f });
+  };
+
+  setScores(startKey, 0, heuristic(state.player.r, state.player.c));
+
+  const ITERATIONS_PER_FRAME = 20;
+
+  const step = () => {
+    if (!mazeState || mazeState.state !== state) return;
+
+    for (let i = 0; i < ITERATIONS_PER_FRAME; i++) {
+      if (open.size === 0) {
+        renderMaze(state);
+        appendLine("no path found.");
+        state.solving = false;
+        return;
+      }
+
+      let currentKey = null;
+      let lowestF = Infinity;
+      for (const [k, val] of open.entries()) {
+        if (val.f < lowestF) {
+          lowestF = val.f;
+          currentKey = k;
+        }
+      }
+
+      open.delete(currentKey);
+      visited.add(currentKey);
+      state.visitedCells = visited;
+
+      if (currentKey === goalKey) {
+        const path = [];
+        let k = currentKey;
+        while (cameFrom.has(k)) {
+          path.push(k);
+          k = cameFrom.get(k);
+        }
+        path.push(startKey);
+        state.pathCells = new Set(path);
+        state.visitedCells = null;
+        renderMaze(state);
+        setTimeout(() => endMaze("auto"), 300);
+        return;
+      }
+
+      const [cr, cc] = currentKey.split(",").map(Number);
+      for (const [dr, dc] of neighbors) {
+        const nr = cr + dr;
+        const nc = cc + dc;
+
+        if (!canStep(state, { r: cr, c: cc }, { r: nr, c: nc })) continue;
+
+        const neighborKey = `${nr},${nc}`;
+        if (visited.has(neighborKey)) continue;
+
+        const tentativeG = (gScore.get(currentKey) ?? Infinity) + 1;
+        if (tentativeG < (gScore.get(neighborKey) ?? Infinity)) {
+          cameFrom.set(neighborKey, currentKey);
+          setScores(neighborKey, tentativeG, tentativeG + heuristic(nr, nc));
+        }
+      }
+    }
+
+    renderMaze(state);
+    requestAnimationFrame(step);
+  };
+
+  requestAnimationFrame(step);
+}
+
 function showPanel(sectionKey) {
   const content = sections[sectionKey];
   panelScroll.innerHTML = `
@@ -488,7 +824,6 @@ function closePanel() {
 }
 
 async function logAndRespond(raw, responseLines, charDelay = 10) {
-  // Echo the command instantly (feels more like a real terminal)
   appendPromptLine(raw);
   await printLines(responseLines, charDelay);
 }
@@ -496,7 +831,7 @@ async function logAndRespond(raw, responseLines, charDelay = 10) {
 async function handleCommand(rawInput) {
   const command = rawInput.trim();
 
-  // Only add non-empty commands to history for recall navigation.
+  // Only add non-empty commands to history
   if (command) {
     history.push(command);
     historyIndex = history.length;
@@ -513,56 +848,19 @@ async function handleCommand(rawInput) {
   const [cmdRaw, ...args] = parts;
   const lowerCmd = (cmdRaw || "").toLowerCase();
 
-  // --- Executable handling (about / about.exe) -------------------------
   let sectionKey = lowerCmd.replace(/\.exe$/, ""); // strip ".exe" or if present
-  // strip preceeding "./" or if present
-  sectionKey = sectionKey.replace(/^\.\/ */, "");
+  sectionKey = sectionKey.replace(/^\.\/ */, ""); // strip preceeding "./" or if present
 
   if (sections[sectionKey]) {
     showPanel(sectionKey);
-    await printLines(
-      [`executing ./${sectionKey}.exe`],
-      20 // typing speed for section “launch” text
-    );
+    await printLines([`executing ./${sectionKey}.exe`], 20);
     scrollToBottom();
     return;
   }
 
-  // --- Named Commands --------------------------------------------------
   switch (lowerCmd) {
     case "help":
-      await printLines(
-        [
-          "Available commands:",
-          "   help",
-          "        show this help menu",
-          "",
-          "   ls",
-          "        list available sections",
-          "",
-          "   <name>  |  ./<name>  |  <name>.exe",
-          "        use any of the above to execute a section",
-          "",
-          "   theme list",
-          "        list available color themes",
-          "",
-          "   theme <name>",
-          "        apply a named theme",
-          "",
-          "   theme <bg> <text> <prompt>",
-          "        apply custom hex colors",
-          "   snake",
-          "        play ASCII Snake!",
-          "",
-          "   clear",
-          "        clear the terminal",
-          "",
-          "   press ↑ / ↓",
-          "        navigate prompt history",
-          "",
-        ],
-        20
-      );
+      await printLines(helpLinesArray, 20);
       break;
 
     case "theme": {
@@ -655,6 +953,34 @@ async function handleCommand(rawInput) {
       break;
     }
 
+    case "maze": {
+      if (mazeState) {
+        await printLines(
+          ["maze already running. Press ESC to quit current maze."],
+          10
+        );
+        break;
+      }
+
+      if (args.length !== 1 || Number.isNaN(Number(args[0]))) {
+        await printLines(["usage: maze <size 10-50>"], 10);
+        break;
+      }
+
+      const size = parseInt(args[0], 10);
+      if (size < 10 || size > 50) {
+        await printLines(
+          ["usage: maze <size 10-50>", "error: size must be between 10 and 50"],
+          10
+        );
+        break;
+      }
+
+      await printLines([`generating ${size}x${size} maze...`], 10);
+      startMaze(size);
+      break;
+    }
+
     case "sl":
       await printLines(["You found an easter egg! Steam locomotive!"], 10);
       await runSteamLocomotive();
@@ -719,6 +1045,10 @@ function boot() {
 }
 
 input.addEventListener("keydown", async (event) => {
+  if (mazeState || snakeGame) {
+    event.preventDefault();
+    return;
+  }
   if (event.key === "Enter") {
     event.preventDefault();
     const rawValue = input.value;
