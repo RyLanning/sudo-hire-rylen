@@ -301,6 +301,23 @@ async function handleCommand(rawInput) {
         break;
       }
 
+      if (args.length === 1 && args[0].toLowerCase() === "randomhex") {
+        const randomHex = () => {
+          const hex = Math.floor(Math.random() * 0xffffff)
+            .toString(16)
+            .padStart(6, "0");
+          return `#${hex}`;
+        };
+        const bgHex = randomHex();
+        const textHex = randomHex();
+        applyTheme(bgHex, textHex);
+        await printLines(
+          [`applied random theme: bg=${bgHex}, text=${textHex}`],
+          12
+        );
+        break;
+      }
+
       if (args.length === 1) {
         const name = args[0].toLowerCase();
         const selected = themes[name];
