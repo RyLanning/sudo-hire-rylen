@@ -2,6 +2,12 @@ const output = document.getElementById("output");
 const input = document.getElementById("cmdInput");
 const panel = document.getElementById("panel");
 const promptText = "[hiringagent@sudo_hire_rylen ~]$";
+const themes = {
+  matrix: { bg: "#000000", text: "#00ff66" },
+  amber: { bg: "#000000", text: "#ffbf00" },
+  ice: { bg: "#001018", text: "#a8ffff" },
+  light: { bg: "#f5f5f5", text: "#111111" },
+};
 
 const sections = {
   about: `
@@ -72,6 +78,15 @@ const welcome = [
   "booting portfolio shell...",
   'type "help" to see available commands.',
 ];
+
+function applyTheme(bg, text) {
+  document.documentElement.style.setProperty("--bg-color", bg);
+  document.documentElement.style.setProperty("--text-color", text);
+}
+
+function isHexColor(str) {
+  return /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(str);
+}
 
 function appendLine(text, className = "") {
   const line = document.createElement("div");
@@ -195,8 +210,9 @@ async function handleCommand(rawInput) {
     return;
   }
 
-  const [cmdRaw] = command.split(/\s+/);
-  const lowerCmd = cmdRaw.toLowerCase();
+  const parts = command.split(/\s+/);
+  const [cmdRaw, ...args] = parts;
+  const lowerCmd = (cmdRaw || "").toLowerCase();
 
   // --- Executable handling (about / about.exe) -------------------------
   let sectionKey = lowerCmd.replace(/\.exe$/, ""); // strip ".exe" if present
@@ -220,6 +236,9 @@ async function handleCommand(rawInput) {
           "  help                   - show this help menu",
           "  ls                     - list available sections",
           "  <name> or <name>.exe   - execute a section (about, projects, contact, history)",
+          "  theme list             - list available color themes",
+          "  theme <name>           - apply a named theme",
+          "  theme <bg> <text>      - apply custom hex colors",
           "  clear                  - clear the terminal",
           "  press ↑ / ↓            - navigate prompt history",
           "",
@@ -227,6 +246,72 @@ async function handleCommand(rawInput) {
         15
       );
       break;
+
+    case "theme": {
+      if (args.length === 1 && args[0].toLowerCase() === "list") {
+        await printLines(
+          [
+            "available themes:",
+            ...Object.keys(themes).map((name) => `  - ${name}`),
+          ],
+          12
+        );
+        break;
+      }
+
+      if (args.length === 1) {
+        const name = args[0].toLowerCase();
+        const selected = themes[name];
+        if (selected) {
+          applyTheme(selected.bg, selected.text);
+          await printLines([`applied theme: ${name}`], 12);
+        } else {
+          await printLines(
+            [
+              `theme: "${args[0]}" not recognized`,
+              "use: theme list",
+              "or:  theme <name>",
+              "or:  theme <bg-hex> <text-hex>",
+            ],
+            12
+          );
+        }
+        break;
+      }
+
+      if (args.length === 2) {
+        const [bgHex, textHex] = args;
+        if (isHexColor(bgHex) && isHexColor(textHex)) {
+          applyTheme(bgHex, textHex);
+          await printLines(
+            [`applied custom theme: bg=${bgHex}, text=${textHex}`],
+            12
+          );
+        } else {
+          await printLines(
+            [
+              `theme: "${args.join(" ")}" not recognized`,
+              "use: theme list",
+              "or:  theme <name>",
+              "or:  theme <bg-hex> <text-hex>",
+            ],
+            12
+          );
+        }
+        break;
+      }
+
+      await printLines(
+        [
+          `theme: "${args.join(" ")}" not recognized`,
+          "use: theme list",
+          "or:  theme <name>",
+          "or:  theme <bg-hex> <text-hex>",
+        ],
+        12
+      );
+      break;
+    }
 
     case "ls":
       await printLines(
