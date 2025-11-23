@@ -101,6 +101,7 @@ const sections = {
 const history = [];
 let historyIndex = -1;
 let currentSection = null;
+let snakeGame = null;
 
 const welcome = [
   "booting portfolio shell...",
@@ -296,6 +297,179 @@ function runSteamLocomotive() {
   });
 }
 
+// --- Snake Game -------------------------------------------------------
+function renderSnakeGrid(state) {
+  const { width, height, snake, food, gridEl } = state;
+  const rows = Array.from({ length: height }, () => Array(width).fill("·"));
+
+  // place food
+  rows[food.y][food.x] = "o";
+
+  // place snake body/head
+  snake.forEach((segment, idx) => {
+    rows[segment.y][segment.x] = idx === 0 ? "@" : "#";
+  });
+
+  const lines = rows.map((row) => row.join(""));
+  gridEl.textContent = lines.join("\n");
+}
+
+function endSnakeGame(result) {
+  if (!snakeGame) return;
+  const { container, intervalId, keyHandler, resolveGame, state } = snakeGame;
+  clearInterval(intervalId);
+  window.removeEventListener("keydown", keyHandler, true);
+  snakeGame = null;
+
+  if (container && container.parentNode === output) {
+    container.remove();
+  }
+
+  const highScore = Math.max(state.score, state.highScore || 0);
+  localStorage.setItem("snakeHighScore", String(highScore));
+  appendLine(`Game over — Score: ${state.score}, High Score: ${highScore}`);
+
+  input.disabled = false;
+  input.focus();
+
+  resolveGame();
+}
+
+function startSnakeGame() {
+  if (snakeGame) return snakeGame.promise; // prevent double start
+
+  input.disabled = true;
+  input.blur();
+
+  const container = document.createElement("div");
+  container.className = "snake-wrap";
+
+  const note = document.createElement("div");
+  note.className = "snake-note";
+  note.textContent = "Use arrow keys to move. Press ESC to quit.";
+  container.appendChild(note);
+
+  const gridEl = document.createElement("pre");
+  gridEl.className = "snake-grid";
+  container.appendChild(gridEl);
+
+  output.appendChild(container);
+  scrollToBottom();
+
+  const width = 50;
+  const height = 30;
+  const placeFood = (w, h, snakeCells) => {
+    while (true) {
+      const x = Math.floor(Math.random() * w);
+      const y = Math.floor(Math.random() * h);
+      const occupied = snakeCells.some((c) => c.x === x && c.y === y);
+      if (!occupied) return { x, y };
+    }
+  };
+
+  const center = { x: Math.floor(width / 2), y: Math.floor(height / 2) };
+  const snake = [center];
+  let food = placeFood(width, height, snake);
+  const highScore = parseInt(localStorage.getItem("snakeHighScore") || "0", 10);
+
+  const state = {
+    width,
+    height,
+    snake,
+    dir: { x: 1, y: 0 },
+    nextDir: { x: 1, y: 0 },
+    food,
+    score: 0,
+    highScore,
+    gridEl,
+  };
+
+  const handleDirection = (key) => {
+    const dirs = {
+      ArrowUp: { x: 0, y: -1 },
+      ArrowDown: { x: 0, y: 1 },
+      ArrowLeft: { x: -1, y: 0 },
+      ArrowRight: { x: 1, y: 0 },
+    };
+    const next = dirs[key];
+    if (!next) return;
+    // avoid reversing directly
+    if (next.x === -state.dir.x && next.y === -state.dir.y) return;
+    state.nextDir = next;
+  };
+
+  const keyHandler = (event) => {
+    if (!snakeGame) return;
+    if (
+      ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Escape"].includes(
+        event.key
+      )
+    ) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+
+    if (event.key === "Escape") {
+      endSnakeGame({ reason: "quit" });
+      return;
+    }
+
+    handleDirection(event.key);
+  };
+
+  const step = () => {
+    state.dir = state.nextDir;
+    const head = { ...state.snake[0] };
+    head.x += state.dir.x;
+    head.y += state.dir.y;
+
+    // collision with walls
+    if (head.x < 0 || head.x >= width || head.y < 0 || head.y >= height) {
+      endSnakeGame({ reason: "wall" });
+      return;
+    }
+
+    // collision with self
+    if (state.snake.some((seg) => seg.x === head.x && seg.y === head.y)) {
+      endSnakeGame({ reason: "self" });
+      return;
+    }
+
+    state.snake.unshift(head);
+
+    const ateFood = head.x === state.food.x && head.y === state.food.y;
+    if (ateFood) {
+      state.score += 1;
+      state.food = placeFood(width, height, state.snake);
+    } else {
+      state.snake.pop();
+    }
+
+    renderSnakeGrid(state);
+  };
+
+  renderSnakeGrid(state);
+
+  window.addEventListener("keydown", keyHandler, true);
+  const intervalId = setInterval(step, 100);
+
+  let resolveGame;
+  const promise = new Promise((res) => {
+    resolveGame = res;
+  });
+
+  snakeGame = {
+    container,
+    intervalId,
+    keyHandler,
+    resolveGame,
+    promise,
+    state,
+  };
+
+  return promise;
+}
+
 function showPanel(sectionKey) {
   const content = sections[sectionKey];
   panelScroll.innerHTML = `
@@ -360,29 +534,31 @@ async function handleCommand(rawInput) {
       await printLines(
         [
           "Available commands:",
-          "help",
-          "    show this help menu",
+          "   help",
+          "        show this help menu",
           "",
-          "ls",
-          "    list available sections",
+          "   ls",
+          "        list available sections",
           "",
-          "<name>    |    ./<name>    |    <name>.exe",
-          "    use any of the above to execute a section",
+          "   <name>  |  ./<name>  |  <name>.exe",
+          "        use any of the above to execute a section",
           "",
-          "theme list",
-          "    list available color themes",
+          "   theme list",
+          "        list available color themes",
           "",
-          "theme <name>",
-          "    apply a named theme",
+          "   theme <name>",
+          "        apply a named theme",
           "",
-          "theme <bg> <text> <prompt>",
-          "    apply custom hex colors",
+          "   theme <bg> <text> <prompt>",
+          "        apply custom hex colors",
+          "   snake",
+          "        play ASCII Snake!",
           "",
-          "clear",
-          "    clear the terminal",
+          "   clear",
+          "        clear the terminal",
           "",
-          "press ↑ / ↓",
-          "    navigate prompt history",
+          "   press ↑ / ↓",
+          "        navigate prompt history",
           "",
         ],
         20
@@ -411,6 +587,8 @@ async function handleCommand(rawInput) {
         const bgHex = randomHex();
         const textHex = randomHex();
         const promptHex = randomHex();
+        // TODO: make sure text and prompt are significantly different from the bg
+
         applyTheme(bgHex, textHex, promptHex);
         await printLines(
           [
@@ -480,6 +658,11 @@ async function handleCommand(rawInput) {
     case "sl":
       await printLines(["You found an easter egg! Steam locomotive!"], 10);
       await runSteamLocomotive();
+      break;
+
+    case "snake":
+      await printLines(["Launching Snake..."], 10);
+      await startSnakeGame();
       break;
 
     case "ls":

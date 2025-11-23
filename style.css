@@ -287,3 +287,22 @@ input:focus-visible {
   color: var(--text-color);
   line-height: 1.1;
 }
+
+.snake-wrap {
+  margin: 0.75rem 0;
+  padding: 0.6rem;
+  border: 1px dashed color-mix(in srgb, var(--text-color) 50%, transparent);
+  background: color-mix(in srgb, var(--bg-color) 85%, transparent);
+}
+
+.snake-note {
+  font-family: var(--font);
+  margin-bottom: 0.35rem;
+}
+
+.snake-grid {
+  margin: 0;
+  font-family: var(--font);
+  white-space: pre;
+  line-height: 1.1;
+}
