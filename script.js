@@ -4,9 +4,9 @@ const panel = document.getElementById("panel");
 const promptText = "[hiringagent@sudo_hire_rylen ~]$";
 let activeTypeJob = null;
 const themes = {
-  matrix: { bg: "#000000", text: "#00ff66", prompt: "#47b272ff" },
+  matrix: { bg: "#000000", text: "#00ff66", prompt: "#ffffff" },
   amber: { bg: "#000000", text: "#ffbf00", prompt: "#ff8000" },
-  ice: { bg: "#001018", text: "#a8ffff", prompt: "#66d9ef" },
+  ice: { bg: "#001018", text: "#a8ffff", prompt: "#6671efff" },
   light: { bg: "#f5f5f5", text: "#111111", prompt: "#000000" },
 };
 
