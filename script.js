@@ -1,7 +1,17 @@
 const output = document.getElementById("output");
 const input = document.getElementById("cmdInput");
 const panel = document.getElementById("panel");
+const panelScroll = document.getElementById("panelScroll");
 const promptText = "[hiringagent@sudo_hire_rylen ~]$";
+const myBirthDay = new Date(2003, 6, 25); // June 25, 2003
+const myAge = Math.floor(
+  (Date.now() - myBirthDay.getTime()) / (1000 * 60 * 60 * 24 * 365.25)
+);
+const industryStartDate = new Date(2023, 8, 14); // September 14, 2023
+const myExperienceYears = (
+  (Date.now() - industryStartDate.getTime()) /
+  (1000 * 60 * 60 * 24 * 365.25)
+).toFixed(1);
 let activeTypeJob = null;
 const themes = {
   matrix: { bg: "#000000", text: "#00ff66", prompt: "#ffffff" },
@@ -12,17 +22,55 @@ const themes = {
 
 const sections = {
   about: `
-    <p>Hi, I'm Rylen! TODO: ADD MORE ABOUT ME</p>
+    <p>Hi, I'm Rylen!</p>
+    <p>
+      I'm a ${myAge} year old software developer with ${myExperienceYears} years of industry experience.
+      When I was in elementary school, I learned to open the browser developer tools while bored in typing class, 
+      and taught myself HTML/CSS by reading other websites' code. I created my first simple website when I was 10,
+      a simple matrix-themed 'about me' page - only on localhost back then!
+      I've been in love with software development since, and that's part of how I got the idea for this terminal-style portfolio!
+      I specialize in full-stack development of modern, accessible, and performant web applications, and I have experience in many
+      technologies. 
+      I graduated from University of Nebraska-Lincoln in 2025 with a Bachelor's degree in Software Development, where I learned a 
+      wide range of software engineering principles and practices.
+    </p>
+    <p>
+      I pride myself on my user-centric approach to development, attention to detail, and my ability to learn new technologies quickly.
+      I'm always excited to take on new challenges and collaborate with others to create innovative and impactful software solutions.
+    </p>
+    <p>
+      When I'm not coding, I enjoy hiking, photography, board games, videogames, and spending time with friends and family.
+      I love games and puzzles that challenge my problem-solving skills, and I often find inspiration for my development work
+      from game design principles. My desk is always covered in rubix cubes and puzzle toys!
+    </p>
+    <p>
+      I've worked with a ton of different technologies over the years in various domains, and I'm always eager to learn more!
+      Here are some of the skills I bring to the table:
+    </p>
     <div class="skills">
-      <span class="pill">TODO: UPDATE/ADD SKILLS</span>
       <span class="pill">JavaScript</span>
-      <span class="pill">TypeScript</span>
       <span class="pill">CSS / Animations</span>
-      <span class="pill">React-ish</span>
-      <span class="pill">Accessibility</span>
-      <span class="pill">Design Systems</span>
-      <span class="pill">Node</span>
-      <span class="pill">UI Prototyping</span>
+      <span class="pill">Python</span>
+      <span class="pill">PHP</span>
+      <span class="pill">GoLang</span>
+      <span class="pill">HTML5</span>
+      <span class="pill">GitHub</span>
+      <span class="pill">React</span>
+      <span class="pill">Python for Data Science</span>
+      <span class="pill">Python for Machine Learning</span>
+      <span class="pill">SQL</span>
+      <span class="pill">AWS/Azure</span>
+      <span class="pill">UI Design</span>
+      <span class="pill">UI Design</span>
+      <span class="pill">UI Design</span>
+      <span class="pill">UI Design</span>
+      <span class="pill">UI Design</span>
+      <span class="pill">UI Design</span>
+      <span class="pill">UI Design</span>
+      <span class="pill">UI Design</span>
+      <span class="pill">UI Design</span>
+      <span class="pill">UI Design</span>
+      <span class="pill">System Design</span>
     </div>
   `,
   projects: `
@@ -207,7 +255,7 @@ function printLines(lines, charDelay = 0) {
 
 function showPanel(sectionKey) {
   const content = sections[sectionKey];
-  panel.innerHTML = `
+  panelScroll.innerHTML = `
     <div class="panel-header">/ ${sectionKey} -----------------------------------</div>
     <div class="panel-body">${content}</div>
     <div class="panel-footer">---------------------------------------------</div>
@@ -217,7 +265,7 @@ function showPanel(sectionKey) {
 }
 
 function closePanel() {
-  panel.innerHTML = "";
+  panelScroll.innerHTML = "";
   panel.classList.add("hidden");
   currentSection = null;
 }

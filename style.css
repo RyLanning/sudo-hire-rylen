@@ -14,7 +14,7 @@
 
 body {
   margin: 0;
-  min-height: 100vh;
+  height: 100vh;
   background: var(--bg-color);
   color: var(--text-color);
   font-family: var(--font);
@@ -32,7 +32,7 @@ body {
 
 @media (min-width: 900px) {
   .layout {
-    grid-template-columns: 1.2fr 1fr;
+    grid-template-columns: 1fr 1fr;
   }
 }
 
@@ -66,20 +66,24 @@ body {
   font-size: 0.98rem;
 }
 
-#output::-webkit-scrollbar {
+#output::-webkit-scrollbar,
+.panel-scroll::-webkit-scrollbar {
   width: 8px;
 }
 
-#output::-webkit-scrollbar-track {
-  background-color: var(--bg-color);
+#output::-webkit-scrollbar-track,
+.panel-scroll::-webkit-scrollbar-track {
+  background-color: rgba(0, 0, 0, 0);
 }
 
-#output::-webkit-scrollbar-thumb {
+#output::-webkit-scrollbar-thumb,
+.panel-scroll::-webkit-scrollbar-thumb {
   background-color: var(--text-color);
   border-radius: 5px;
 }
 
-#output::-webkit-scrollbar-thumb:hover {
+#output::-webkit-scrollbar-thumb:hover,
+.panel-scroll::-webkit-scrollbar-thumb:hover {
   background-color: var(--prompt-color);
 }
 
@@ -123,8 +127,15 @@ body {
 }
 
 .panel {
-  min-height: 35vh;
+  height: calc(100vh - 4rem);
+  overflow: hidden;
   position: relative;
+}
+
+.panel-scroll {
+  height: 100%;
+  overflow-y: scroll;
+  padding-right: 0.5rem;
 }
 
 .hidden {
