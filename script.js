@@ -108,7 +108,7 @@ let currentSection = null;
 
 const welcome = [
   "booting portfolio shell...",
-  'type "help" to see available commands.',
+  'type "help" and hit enter to see available commands.',
 ];
 
 function applyTheme(bg, text, prompt) {
@@ -253,6 +253,53 @@ function printLines(lines, charDelay = 0) {
   return job.done;
 }
 
+function runSteamLocomotive() {
+  const trainLines = [
+    "      ====        ________                ___________ ",
+    "  _D _|  |_______/        \\__I_I_____===__|_________| ",
+    "   |(_)---  |   H\\________/ |   |        =|___ ___|   ",
+    "   /     |  |   H  |  |     |   |         ||_| |_||   ",
+    "  |      |  |   H  |__--------------------| [___] |   ",
+    "  | ________|___H__/__|_____/[][]~\\_______|       |   ",
+    "  |/ |   |-----------I_____I [][] []  D   |=======|__ ",
+    "__/ =| o |=-~~\\  /~~\\  /~~\\  /~~\\ ____Y___________|__ ",
+    " |/-=|___|=    ||    ||    ||    |_____/~\\___/        ",
+    " \\_/      \\O=====O=====O=====O_/      \\_/             ",
+  ];
+
+  return new Promise((resolve) => {
+    const wrap = document.createElement("div");
+    wrap.className = "train";
+    wrap.textContent = trainLines.join("\n");
+    wrap.style.transform = "translateX(0px)";
+    wrap.style.willChange = "transform";
+
+    output.appendChild(wrap);
+    scrollToBottom();
+
+    const startX = output.clientWidth || 600;
+    let x = startX;
+
+    const animate = () => {
+      x -= 8; // speed per frame
+      wrap.style.transform = `translateX(${x}px)`;
+      scrollToBottom();
+      const offscreen = x + wrap.offsetWidth < -40;
+      if (!offscreen) {
+        requestAnimationFrame(animate);
+      } else {
+        wrap.remove();
+        resolve();
+      }
+    };
+
+    requestAnimationFrame(() => {
+      wrap.style.transform = `translateX(${x}px)`;
+      requestAnimationFrame(animate);
+    });
+  });
+}
+
 function showPanel(sectionKey) {
   const content = sections[sectionKey];
   panelScroll.innerHTML = `
@@ -297,7 +344,9 @@ async function handleCommand(rawInput) {
   const lowerCmd = (cmdRaw || "").toLowerCase();
 
   // --- Executable handling (about / about.exe) -------------------------
-  let sectionKey = lowerCmd.replace(/\.exe$/, ""); // strip ".exe" if present
+  let sectionKey = lowerCmd.replace(/\.exe$/, ""); // strip ".exe" or if present
+  // strip preceeding "./" or if present
+  sectionKey = sectionKey.replace(/^\.\/ */, "");
 
   if (sections[sectionKey]) {
     showPanel(sectionKey);
@@ -321,8 +370,8 @@ async function handleCommand(rawInput) {
           "ls",
           "    list available sections",
           "",
-          "<name> or <name>.exe",
-          "    execute a section (about, projects, contact, history)",
+          "<name>    |    ./<name>    |    <name>.exe",
+          "    use any of the above to execute a section",
           "",
           "theme list",
           "    list available color themes",
@@ -433,6 +482,11 @@ async function handleCommand(rawInput) {
       );
       break;
     }
+
+    case "sl":
+      await printLines(["You found an easter egg! Steam locomotive!"], 10);
+      await runSteamLocomotive();
+      break;
 
     case "ls":
       await printLines(

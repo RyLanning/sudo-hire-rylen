@@ -62,6 +62,7 @@ body {
 .output {
   flex: 1;
   overflow-y: scroll;
+  overflow-x: hidden;
   padding: 0.75rem 0.25rem 0.5rem;
   font-size: 0.98rem;
 }
@@ -272,4 +273,12 @@ input:focus-visible {
   height: 1.1em;
   background: var(--text-color);
   animation: pulse 1s steps(2, start) infinite;
+}
+
+.train {
+  display: inline-block;
+  white-space: pre;
+  font-family: var(--font);
+  color: var(--text-color);
+  line-height: 1.1;
 }
