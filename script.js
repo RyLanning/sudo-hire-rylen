@@ -68,8 +68,6 @@ const history = [];
 let historyIndex = -1;
 let currentSection = null;
 
-const lsOutput = "about/   projects/   contact/   history/";
-
 const welcome = [
   "booting portfolio shell...",
   'type "help" to see available commands.',
@@ -80,6 +78,18 @@ function appendLine(text, className = "") {
   line.className = className ? `line ${className}` : "line";
   line.textContent = text;
   output.appendChild(line);
+}
+
+function appendPromptLine(raw) {
+  const line = document.createElement("div");
+  line.className = "line";
+  const promptSpan = document.createElement("span");
+  promptSpan.className = "prompt-inline";
+  promptSpan.textContent = promptText;
+  line.appendChild(promptSpan);
+  line.appendChild(document.createTextNode(` ${raw}`));
+  output.appendChild(line);
+  scrollToBottom();
 }
 
 function scrollToBottom() {
@@ -165,9 +175,10 @@ function closePanel() {
 
 async function logAndRespond(raw, responseLines, charDelay = 10) {
   // Echo the command instantly (feels more like a real terminal)
-  appendLine(`${promptText} ${raw}`);
+  appendPromptLine(raw);
   await printLines(responseLines, charDelay);
 }
+
 async function handleCommand(rawInput) {
   const command = rawInput.trim();
 
@@ -177,63 +188,64 @@ async function handleCommand(rawInput) {
     historyIndex = history.length;
   }
 
-  const [cmd, ...args] = command.split(/\s+/);
-  const lowerCmd = cmd.toLowerCase();
+  appendPromptLine(rawInput);
 
+  if (!command) {
+    scrollToBottom();
+    return;
+  }
+
+  const [cmdRaw] = command.split(/\s+/);
+  const lowerCmd = cmdRaw.toLowerCase();
+
+  // --- Executable handling (about / about.exe) -------------------------
+  let sectionKey = lowerCmd.replace(/\.exe$/, ""); // strip ".exe" if present
+
+  if (sections[sectionKey]) {
+    showPanel(sectionKey);
+    await printLines(
+      [`executing ./${sectionKey}.exe`],
+      20 // typing speed for section “launch” text
+    );
+    scrollToBottom();
+    return;
+  }
+
+  // --- Named Commands --------------------------------------------------
   switch (lowerCmd) {
-    case "":
-      appendLine(`${promptText} ${rawInput}`);
-      break;
     case "help":
-      await logAndRespond(rawInput, [
-        "Available commands:",
-        "  help               - show this help menu",
-        "  ls                 - list available sections",
-        "  cd <section>       - open a section (about, projects, contact, history)",
-        "  cd ..  or  cd /    - return to root",
-        "  clear              - clear the terminal",
-        "  press ↑ / ↓        - navigate prompt history",
-        "  sudo hire rylen    - hire Rylen (if you have permission)",
-        "",
-        "Examples:",
-        "  cd projects",
-        "  cd ..",
-      ]);
+      await printLines(
+        [
+          "Available commands:",
+          "  help                   - show this help menu",
+          "  ls                     - list available sections",
+          "  <name> or <name>.exe   - execute a section (about, projects, contact, history)",
+          "  clear                  - clear the terminal",
+          "  press ↑ / ↓            - navigate prompt history",
+          "",
+        ],
+        15
+      );
       break;
+
     case "ls":
-      await logAndRespond(rawInput, [lsOutput]);
+      await printLines(
+        ["about.exe   projects.exe   contact.exe   history.exe"],
+        10
+      );
       break;
-    case "cd": {
-      const target = (args[0] || "").toLowerCase();
-      if (!target) {
-        await logAndRespond(rawInput, ["cd: missing operand"]);
-        break;
-      }
-      if (target === ".." || target === "/") {
-        closePanel();
-        await logAndRespond(rawInput, ["returned to /"]);
-        break;
-      }
-      if (!sections[target]) {
-        await logAndRespond(rawInput, [
-          `cd: no such file or directory: ${target}`,
-        ]);
-        break;
-      }
-      showPanel(target);
-      await logAndRespond(rawInput, [`navigated to /${target}`]);
-      break;
-    }
-    case "sudo hire rylen":
-      await logAndRespond(rawInput, [
-        "Permission granted. Rylen has been hired! 🎉",
-      ]);
-      break;
+
     case "clear":
       output.innerHTML = "";
+      closePanel();
       break;
+
+    case "sudo hire rylen":
+      await printLines(["Permission granted. Rylen has been hired! 🎉"], 25);
+      break;
+
     default:
-      await logAndRespond(rawInput, [`command not found: ${cmd}`]);
+      await printLines([`command not found: ${cmdRaw}`], 10);
   }
 
   scrollToBottom();
