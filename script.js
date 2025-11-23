@@ -279,6 +279,7 @@ async function handleCommand(rawInput) {
           "  ls                     - list available sections",
           "  <name> or <name>.exe   - execute a section (about, projects, contact, history)",
           "  theme list             - list available color themes",
+          "  theme randomhex        - apply a random color theme for bg and text",
           "  theme <name>           - apply a named theme",
           "  theme <bg> <text>      - apply custom hex colors",
           "  clear                  - clear the terminal",
@@ -329,6 +330,7 @@ async function handleCommand(rawInput) {
             [
               `theme: "${args[0]}" not recognized`,
               "use: theme list",
+              "or:  theme randomhex",
               "or:  theme <name>",
               "or:  theme <bg-hex> <text-hex>",
             ],
