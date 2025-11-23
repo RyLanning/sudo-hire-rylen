@@ -11,7 +11,6 @@ const themes = {
 
 const sections = {
   about: `
-    <div class="ascii-line">---------------- about ----------------</div>
     <p>Hi, I'm Rylen — a front-end engineer who likes turning ideas into tactile, fast UIs. I enjoy building deliberate, playful interfaces that still feel professional.</p>
     <p>Currently exploring web animation, design systems, and ways to make developer tooling feel friendlier.</p>
     <div class="skills">
@@ -24,10 +23,8 @@ const sections = {
       <span class="pill">Node</span>
       <span class="pill">UI Prototyping</span>
     </div>
-    <div class="ascii-line">---------------------------------------</div>
   `,
   projects: `
-    <div class="ascii-line">--------------- projects ---------------</div>
     <div class="project-grid">
       <div class="project-card">
         <strong>Signal Board</strong>
@@ -45,10 +42,8 @@ const sections = {
         <a href="#" aria-label="View Waypoint Docs project">view placeholder link</a>
       </div>
     </div>
-    <div class="ascii-line">---------------------------------------</div>
   `,
   contact: `
-    <div class="ascii-line">---------------- contact ----------------</div>
     <p>Always happy to chat about collaborations, UI ideas, or cool developer tools.</p>
     <div class="contact-links">
       <div class="contact-link"><a href="mailto:rylen@example.com">✉️ rylen@example.com</a></div>
@@ -56,17 +51,14 @@ const sections = {
       <div class="contact-link"><a href="https://www.linkedin.com/" target="_blank" rel="noreferrer noopener">💼 LinkedIn</a></div>
       <div class="contact-link"><a href="#" aria-label="Portfolio link placeholder">🖥️ Portfolio placeholder</a></div>
     </div>
-    <div class="ascii-line">----------------------------------------</div>
   `,
   history: `
-    <div class="ascii-line">---------------- history ----------------</div>
     <div class="timeline">
       <div class="timeline-item"><strong>2024 — Present</strong><br/>Senior Front-end Engineer crafting dashboards & design system utilities.</div>
       <div class="timeline-item"><strong>2022 — 2024</strong><br/>Built interactive data visualizations and performance-focused UI tooling.</div>
       <div class="timeline-item"><strong>2020 — 2022</strong><br/>Shipped marketing sites & product UI experiments for early-stage teams.</div>
       <div class="timeline-item"><strong>2018 — 2020</strong><br/>Learned the ropes with HTML/CSS/JS freelancing and open-source tinkering.</div>
     </div>
-    <div class="ascii-line">----------------------------------------</div>
   `,
 };
 
