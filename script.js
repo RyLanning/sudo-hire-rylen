@@ -61,24 +61,20 @@ const sections = {
       <span class="pill">SQL</span>
       <span class="pill">AWS/Azure</span>
       <span class="pill">UI Design</span>
-      <span class="pill">UI Design</span>
-      <span class="pill">UI Design</span>
-      <span class="pill">UI Design</span>
-      <span class="pill">UI Design</span>
-      <span class="pill">UI Design</span>
-      <span class="pill">UI Design</span>
-      <span class="pill">UI Design</span>
-      <span class="pill">UI Design</span>
-      <span class="pill">UI Design</span>
       <span class="pill">System Design</span>
     </div>
   `,
   projects: `
     <div class="project-grid">
       <div class="project-card">
-        <strong>TODO: ADD PROJECT TITLE</strong>
-        <p>TODO: ADD PROJECT DESCRIPTION</p>
-        <a href="#" aria-label="TODO: ADD PROJECT LINK">TODO: ADD PROJECT LINK</a>
+        <strong>This Website</strong>
+        <p>You're lookin at it! Here's some hidden features if you haven't discovered them yet.</p>
+        <ul>
+          <li>Try the command: <code>sl</code> for a fun easter egg!</li>
+          <li>Randomize the color theme with the <code>theme random</code> command. Beware - it's not guaranteed to look good!</li>
+          <li>Use <code>whoami</code> to see a fun response.</li>
+        </ul>
+        <a href="https://github.com/RyLanning/sudo-hire-rylen" target="_blank" aria-label="View this project on GitHub">View on GitHub</a>
       </div>
     </div>
   `,
@@ -376,9 +372,6 @@ async function handleCommand(rawInput) {
           "theme list",
           "    list available color themes",
           "",
-          "theme randomhex",
-          "    apply a random color theme for bg and text",
-          "",
           "theme <name>",
           "    apply a named theme",
           "",
@@ -408,7 +401,7 @@ async function handleCommand(rawInput) {
         break;
       }
 
-      if (args.length === 1 && args[0].toLowerCase() === "randomhex") {
+      if (args.length === 1 && args[0].toLowerCase() === "random") {
         const randomHex = () => {
           const hex = Math.floor(Math.random() * 0xffffff)
             .toString(16)
@@ -439,7 +432,6 @@ async function handleCommand(rawInput) {
             [
               `theme: "${args[0]}" not recognized`,
               "use: theme list",
-              "or:  theme randomhex",
               "or:  theme <name>",
               "or:  theme <bg-hex> <text-hex> <prompt-hex>",
             ],
@@ -449,12 +441,14 @@ async function handleCommand(rawInput) {
         break;
       }
 
-      if (args.length === 2) {
-        const [bgHex, textHex] = args;
-        if (isHexColor(bgHex) && isHexColor(textHex)) {
-          applyTheme(bgHex, textHex, textHex);
+      if (args.length === 3) {
+        const [bgHex, textHex, promptHex] = args;
+        if (isHexColor(bgHex) && isHexColor(textHex) && isHexColor(promptHex)) {
+          applyTheme(bgHex, textHex, promptHex);
           await printLines(
-            [`applied custom theme: bg=${bgHex}, text=${textHex}`],
+            [
+              `applied custom theme: bg=${bgHex}, text=${textHex}, prompt=${promptHex}`,
+            ],
             12
           );
         } else {
@@ -463,7 +457,7 @@ async function handleCommand(rawInput) {
               `theme: "${args.join(" ")}" not recognized`,
               "use: theme list",
               "or:  theme <name>",
-              "or:  theme <bg-hex> <text-hex>",
+              "or:  theme <bg-hex> <text-hex> <prompt-hex>",
             ],
             12
           );
