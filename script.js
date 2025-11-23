@@ -343,7 +343,7 @@ async function handleCommand(rawInput) {
           "    navigate prompt history",
           "",
         ],
-        15
+        20
       );
       break;
 
@@ -446,8 +446,11 @@ async function handleCommand(rawInput) {
       closePanel();
       break;
 
-    case "sudo hire rylen":
-      await printLines(["Permission granted. Rylen has been hired! 🎉"], 25);
+    case "whoami":
+      await printLines(
+        ["Hopefully a hiring agent, and you're about to hire me! ;)"],
+        25
+      );
       break;
 
     default:
