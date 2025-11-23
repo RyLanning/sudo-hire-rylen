@@ -2,6 +2,7 @@ const output = document.getElementById("output");
 const input = document.getElementById("cmdInput");
 const panel = document.getElementById("panel");
 const promptText = "[hiringagent@sudo_hire_rylen ~]$";
+let activeTypeJob = null;
 const themes = {
   matrix: { bg: "#000000", text: "#00ff66" },
   amber: { bg: "#000000", text: "#ffbf00" },
@@ -106,61 +107,110 @@ function scrollToBottom() {
 function printLines(lines, charDelay = 0) {
   const queue = Array.isArray(lines) ? lines : [lines];
 
-  // If no delay (or <= 0), just dump everything instantly like before
+  // No delay: just dump everything
   if (!charDelay || charDelay <= 0) {
     queue.forEach((line) => appendLine(line));
     scrollToBottom();
     return Promise.resolve();
   }
 
-  return new Promise((resolve) => {
-    let lineIndex = 0;
-    let charIndex = 0;
-    let currentLineEl = null;
+  // Animated typing with interrupt support
+  const job = {
+    timer: null,
+    finished: false,
+    flushNow: () => {},
+    finish: () => {},
+    done: null,
+  };
 
-    const typeNextChar = () => {
-      // Done with all lines
-      if (lineIndex >= queue.length) {
-        scrollToBottom();
-        resolve();
-        return;
+  // This promise resolves when the job is completely finished
+  job.done = new Promise((resolve) => {
+    job.finish = () => {
+      if (job.finished) return;
+      job.finished = true;
+      if (job.timer) {
+        clearTimeout(job.timer);
       }
+      if (activeTypeJob === job) {
+        activeTypeJob = null;
+      }
+      resolve();
+    };
+  });
 
+  activeTypeJob = job;
+
+  let lineIndex = 0;
+  let charIndex = 0;
+  let currentLineEl = null;
+
+  const flushRemaining = () => {
+    if (job.finished) return;
+
+    // Finish current and remaining lines instantly
+    while (lineIndex < queue.length) {
       const line = queue[lineIndex];
 
-      // Start a new line element if needed
       if (!currentLineEl) {
         currentLineEl = document.createElement("div");
         currentLineEl.className = "line";
         output.appendChild(currentLineEl);
       }
 
-      // If this line is empty, just move on to next
-      if (line.length === 0) {
-        lineIndex += 1;
-        charIndex = 0;
-        currentLineEl = null;
-        setTimeout(typeNextChar, charDelay);
-        return;
-      }
+      currentLineEl.textContent += line.slice(charIndex);
+      lineIndex += 1;
+      charIndex = 0;
+      currentLineEl = null;
+    }
 
-      // Append next character
-      currentLineEl.textContent += line[charIndex];
-      charIndex += 1;
+    scrollToBottom();
+    job.finish();
+  };
+
+  job.flushNow = flushRemaining;
+
+  const typeNextChar = () => {
+    if (job.finished) return;
+
+    if (lineIndex >= queue.length) {
       scrollToBottom();
+      job.finish();
+      return;
+    }
 
-      // End of this line → move to the next
-      if (charIndex >= line.length) {
-        lineIndex += 1;
-        charIndex = 0;
-        currentLineEl = null;
-      }
+    const line = queue[lineIndex];
 
-      setTimeout(typeNextChar, charDelay);
-    };
+    if (!currentLineEl) {
+      currentLineEl = document.createElement("div");
+      currentLineEl.className = "line";
+      output.appendChild(currentLineEl);
+    }
 
-    typeNextChar();
-  });
+    if (line.length === 0) {
+      lineIndex += 1;
+      charIndex = 0;
+      currentLineEl = null;
+      job.timer = setTimeout(typeNextChar, charDelay);
+      return;
+    }
+
+    currentLineEl.textContent += line[charIndex];
+    charIndex += 1;
+    scrollToBottom();
+
+    if (charIndex >= line.length) {
+      lineIndex += 1;
+      charIndex = 0;
+      currentLineEl = null;
+    }
+
+    job.timer = setTimeout(typeNextChar, charDelay);
+  };
+
+  job.timer = setTimeout(typeNextChar, charDelay);
+
+  // handleCommand will `await printLines(...)`
+  return job.done;
 }
 
 function showPanel(sectionKey) {
@@ -355,12 +405,21 @@ function boot() {
   printLines(welcome, 25);
 }
 
-input.addEventListener("keydown", (event) => {
+input.addEventListener("keydown", async (event) => {
   if (event.key === "Enter") {
     event.preventDefault();
     const rawValue = input.value;
     input.value = "";
-    handleCommand(rawValue);
+
+    // If something is currently typing, flush it first
+    if (activeTypeJob) {
+      const job = activeTypeJob;
+      job.flushNow();
+      await job.done; // wait until the flush is fully complete
+    }
+
+    // Now safely process the new command
+    await handleCommand(rawValue);
   } else if (event.key === "ArrowUp" || event.key === "ArrowDown") {
     event.preventDefault();
     handleHistoryNavigation(event.key);
