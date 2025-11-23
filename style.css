@@ -66,6 +66,23 @@ body {
   font-size: 0.98rem;
 }
 
+#output::-webkit-scrollbar {
+  width: 8px;
+}
+
+#output::-webkit-scrollbar-track {
+  background-color: var(--bg-color);
+}
+
+#output::-webkit-scrollbar-thumb {
+  background-color: var(--text-color);
+  border-radius: 5px;
+}
+
+#output::-webkit-scrollbar-thumb:hover {
+  background-color: var(--prompt-color);
+}
+
 .line {
   margin: 0.12rem 0;
   white-space: pre-wrap;
