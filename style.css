@@ -206,7 +206,8 @@ a:hover {
   color: var(--text-color);
   text-shadow: 0 0 10px color-mix(in srgb, var(--text-color) 60%, transparent);
   border-color: var(--text-color);
-  box-shadow: 0 0 12px color-mix(in srgb, var(--text-color) 40%, transparent);
+  border-radius: 8px;
+  box-shadow: 0 0 12px var(--text-color);
   cursor: pointer;
 }
 
@@ -217,8 +218,11 @@ a:hover {
 
 .project-card a {
   color: inherit;
+  border: 1px dashed var(--text-color);
+  border-radius: 8px;
   text-decoration: none;
   font-weight: 600;
+  padding: 10px;
 }
 
 .contact-links {
