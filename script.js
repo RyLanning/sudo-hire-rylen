@@ -739,7 +739,8 @@ function autoSolveMaze(state) {
 
   setScores(startKey, 0, heuristic(state.player.r, state.player.c));
 
-  const ITERATIONS_PER_FRAME = 20;
+  // slower for small mazes, faster for large mazes. Use maze size to scale.
+  const ITERATIONS_PER_FRAME = Math.max(1, Math.floor(state.size / 5));
 
   const step = () => {
     if (!mazeState || mazeState.state !== state) return;
@@ -975,7 +976,14 @@ async function handleCommand(rawInput) {
         break;
       }
 
-      await printLines([`generating ${size}x${size} maze...`], 10);
+      await printLines(
+        [
+          `generating ${size}x${size} maze...`,
+          "All mazes are randomly generated and guaranteed solvable.",
+          "The auto-solver uses A* pathfinding algorithm!",
+        ],
+        10
+      );
       startMaze(size);
       break;
     }
