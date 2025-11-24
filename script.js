@@ -87,18 +87,21 @@ const sections = {
     <p>Always happy to chat about collaborations, UI ideas, or cool developer tools.</p>
     <div class="contact-links">
       <div class="contact-link"><a href="mailto:rylen.lanning@gmail.com">✉️ rylen.lanning@gmail.com</a></div>
-      <div class="contact-link"><a href="#" target="_blank" rel="noreferrer noopener">TODO: UPDATE BELOW LINKS</a></div>
-      <div class="contact-link"><a href="https://github.com/" target="_blank" rel="noreferrer noopener">GitHub</a></div>
+      <div class="contact-link"><a href="https://github.com/RyLanning" target="_blank" rel="noreferrer noopener">GitHub Profile</a></div>
       <div class="contact-link"><a href="https://www.linkedin.com/" target="_blank" rel="noreferrer noopener">LinkedIn</a></div>
     </div>
   `,
   history: `
     <div class="timeline">
       <div class="timeline-item"><strong>2000 - 2000</strong><br/>TODO: ADD HISTORY</div>
-      <div class="timeline-item"><strong>2000 - 2000</strong><br/>TODO: ADD HISTORY</div>
-      <div class="timeline-item"><strong>2000 - 2000</strong><br/>TODO: ADD HISTORY</div>
-      <div class="timeline-item"><strong>2000 - 2000</strong><br/>TODO: ADD HISTORY</div>
-      <div class="timeline-item"><strong>2000 - 2000</strong><br/>TODO: ADD HISTORY</div>
+      <div class="timeline-item"><strong>Aug. 2023 - Current</strong>
+      <br/>SE</div>
+      <div class="timeline-item"><strong>Jan. 2023 - Aug. 2023</strong>
+      <br/>Head Host at Lazlo's restaurant. Fun times!</div>
+      <div class="timeline-item"><strong>Aug. 2019 - Jan. 2023</strong>
+      <br/>Custodial work and some rudimentary website maintenence (using WordPress) for Adultspan counseling.</div>
+      <div class="timeline-item"><strong>June 2003</strong>
+      <br/>Just got here, no prior experience.</div>
     </div>
   `,
 };
@@ -110,33 +113,33 @@ const welcome = [
 
 const helpLinesArray = [
   "Available commands:",
-  "   help",
-  "        show this help menu",
-  "",
-  "   ls",
-  "        list available sections",
-  "",
-  "   <name>  |  ./<name>  |  <name>.exe",
-  "        use any of the above to execute a section",
-  "",
-  "   theme list",
-  "        list available color themes",
-  "",
-  "   theme <name>",
-  "        apply a named theme",
-  "",
-  "   theme <bg> <text> <prompt>",
-  "        apply custom hex colors",
-  "   maze <size>",
-  "        generate & play an ASCII maze (size 10-50)",
-  "   snake",
-  "        play ASCII Snake!",
-  "",
-  "   clear",
-  "        clear the terminal",
-  "",
-  "   press ↑ / ↓",
-  "        navigate prompt history",
+  "| help",
+  "|     show this help menu",
+  "|",
+  "| ls",
+  "|     list available sections",
+  "|",
+  "| <name>  |  ./<name>  |  <name>.exe",
+  "|     use any of the above to execute a section",
+  "|",
+  "| theme list",
+  "|     list available color themes",
+  "|",
+  "| theme <name>",
+  "|     apply a named theme",
+  "|",
+  "| theme <bg> <text> <prompt>",
+  "|     apply custom hex colors",
+  "| maze <size>",
+  "|     generate & play an ASCII maze (size 10-50)",
+  "| snake",
+  "|     play ASCII Snake!",
+  "|",
+  "| clear",
+  "|     clear the terminal",
+  "|",
+  "|   press ↑ / ↓",
+  "|     navigate prompt history",
   "",
 ];
 
