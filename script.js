@@ -183,7 +183,7 @@ const helpLinesArray = [
   "|",
   "| maze <size>",
   "|     generate & play an ASCII maze (size 10-50)",
-  "|    (e.g. 'maze 20', generates a 20x20 maze)",
+  "|     (e.g. 'maze 20', generates a 20x20 maze)",
   "|",
   "| snake",
   "|     play ASCII Snake!",
@@ -191,7 +191,7 @@ const helpLinesArray = [
   "| clear",
   "|     clear the terminal",
   "|",
-  "|   press ↑ / ↓",
+  "| press ↑ / ↓",
   "|     navigate prompt history",
   "",
 ];
