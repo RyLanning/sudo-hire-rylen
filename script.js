@@ -838,6 +838,14 @@ function autoSolveMaze(state) {
         }
         path.push(startKey);
         state.pathCells = new Set(path);
+        // make sure in-between cells are also marked in path
+        for (let pi = 0; pi < path.length - 1; pi++) {
+          const [cr, cc] = path[pi].split(",").map(Number);
+          const [nr, nc] = path[pi + 1].split(",").map(Number);
+          const wallR = (cr + nr) / 2;
+          const wallC = (cc + nc) / 2;
+          state.pathCells.add(`${wallR},${wallC}`);
+        }
         state.visitedCells = null;
         renderMaze(state);
         setTimeout(() => endMaze("auto"), 300);
