@@ -410,8 +410,9 @@ function startSnakeGame() {
     width,
     height,
     snake,
-    dir: { x: 1, y: 0 },
-    nextDir: { x: 1, y: 0 },
+    dir: { x: 0, y: 0 },
+    nextDir: { x: 0, y: 0 },
+    started: false,
     food,
     score: 0,
     highScore,
@@ -428,8 +429,13 @@ function startSnakeGame() {
     const next = dirs[key];
     if (!next) return;
     // avoid reversing direction
-    if (next.x === -state.dir.x && next.y === -state.dir.y) return;
+    const current = state.started ? state.dir : state.nextDir;
+    if (next.x === -current.x && next.y === -current.y) return;
     state.nextDir = next;
+    if (!state.started) {
+      state.dir = next;
+      state.started = true;
+    }
   };
 
   const keyHandler = (event) => {
@@ -452,6 +458,7 @@ function startSnakeGame() {
   };
 
   const step = () => {
+    if (!state.started) return;
     state.dir = state.nextDir;
     const head = { ...state.snake[0] };
     head.x += state.dir.x;
