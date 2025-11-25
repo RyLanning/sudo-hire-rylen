@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
-    <main class="layout">
+    <main id="interactiveContainer" class="layout">
       <section class="terminal" aria-label="Terminal window">
         <div class="terminal-title">📁 // sudo_hire_rylen</div>
         <div id="output" class="output" aria-live="polite"></div>
@@ -34,6 +34,22 @@
         <div id="panelScroll" class="panel-scroll"></div>
       </section>
     </main>
+
+    <div
+      id="overviewMode"
+      class="overview hidden"
+      aria-live="polite"
+      aria-label="Portfolio overview"
+    >
+      <button
+        id="returnToTerminal"
+        class="overview-exit-btn"
+        aria-label="Return to terminal"
+      >
+        >_Reactive Terminal
+      </button>
+      <div id="overviewGrid" class="overview-grid"></div>
+    </div>
 
     <script src="script.js"></script>
   </body>

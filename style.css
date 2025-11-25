@@ -14,7 +14,8 @@
 
 body {
   margin: 0;
-  height: 100vh;
+  min-height: 100vh;
+  overflow-y: auto;
   background: var(--bg-color);
   color: var(--text-color);
   font-family: var(--font);
@@ -318,4 +319,57 @@ input:focus-visible {
 .maze-note {
   font-family: var(--font);
   margin: 0.35rem 0;
+}
+
+.overview {
+  padding: 2rem clamp(1rem, 4vw, 2.5rem);
+}
+
+.overview-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+@media (min-width: 900px) {
+  .overview-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.overview-card {
+  border: 1px solid var(--text-color);
+  border-radius: 10px;
+  padding: 1rem 1.2rem;
+  background: color-mix(in srgb, var(--bg-color) 90%, transparent);
+  box-shadow: 0 0 18px color-mix(in srgb, var(--text-color) 20%, transparent);
+}
+
+.overview-card-title {
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.overview-card-body {
+  line-height: 1.6;
+}
+
+.overview-exit-btn {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 999;
+  border: 1px solid var(--text-color);
+  background: color-mix(in srgb, var(--bg-color) 80%, transparent);
+  color: var(--text-color);
+  padding: 0.4rem 0.7rem;
+  border-radius: 6px;
+  font-family: var(--font);
+  cursor: pointer;
+}
+
+.overview-exit-btn:hover {
+  box-shadow: 0 0 10px color-mix(in srgb, var(--text-color) 60%, transparent);
 }

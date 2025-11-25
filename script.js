@@ -2,6 +2,13 @@ const output = document.getElementById("output");
 const input = document.getElementById("cmdInput");
 const panel = document.getElementById("panel");
 const panelScroll = document.getElementById("panelScroll");
+const terminal = document.querySelector(".terminal");
+const mainInteractiveContainer = document.getElementById(
+  "interactiveContainer"
+);
+const overviewContainer = document.getElementById("overviewMode");
+const overviewGrid = document.getElementById("overviewGrid");
+const overviewExitBtn = document.getElementById("returnToTerminal");
 const promptText = "[hiringagent@sudo_hire_rylen ~]$";
 const myBirthDay = new Date(2003, 6, 25); // June 25, 2003
 const myAge = Math.floor(
@@ -24,6 +31,8 @@ let historyIndex = -1;
 let currentSection = null;
 let snakeGame = null;
 let mazeState = null;
+let overviewActive = false;
+let panelHiddenBeforeOverview = true;
 
 const sections = {
   about: `
@@ -81,6 +90,36 @@ const sections = {
         </ul>
         <a href="https://github.com/RyLanning/sudo-hire-rylen" target="_blank" aria-label="View this project on GitHub">View on GitHub</a>
       </div>
+      <div class="project-card">
+        <strong>This Website</strong>
+        <p>You're lookin at it! Here's some hidden features if you haven't discovered them yet.</p>
+        <ul>
+          <li>Try the command: <code>sl</code> for a fun easter egg!</li>
+          <li>Randomize the color theme with the <code>theme random</code> command. Beware - it's not guaranteed to look good!</li>
+          <li>Use <code>whoami</code> to see a fun response.</li>
+        </ul>
+        <a href="https://github.com/RyLanning/sudo-hire-rylen" target="_blank" aria-label="View this project on GitHub">View on GitHub</a>
+      </div>
+      <div class="project-card">
+        <strong>This Website</strong>
+        <p>You're lookin at it! Here's some hidden features if you haven't discovered them yet.</p>
+        <ul>
+          <li>Try the command: <code>sl</code> for a fun easter egg!</li>
+          <li>Randomize the color theme with the <code>theme random</code> command. Beware - it's not guaranteed to look good!</li>
+          <li>Use <code>whoami</code> to see a fun response.</li>
+        </ul>
+        <a href="https://github.com/RyLanning/sudo-hire-rylen" target="_blank" aria-label="View this project on GitHub">View on GitHub</a>
+      </div>
+      <div class="project-card">
+        <strong>This Website</strong>
+        <p>You're lookin at it! Here's some hidden features if you haven't discovered them yet.</p>
+        <ul>
+          <li>Try the command: <code>sl</code> for a fun easter egg!</li>
+          <li>Randomize the color theme with the <code>theme random</code> command. Beware - it's not guaranteed to look good!</li>
+          <li>Use <code>whoami</code> to see a fun response.</li>
+        </ul>
+        <a href="https://github.com/RyLanning/sudo-hire-rylen" target="_blank" aria-label="View this project on GitHub">View on GitHub</a>
+      </div>
     </div>
   `,
   contact: `
@@ -108,7 +147,11 @@ const sections = {
 
 const welcome = [
   "booting portfolio shell...",
-  'type "help" and hit enter to see available commands.',
+  "This is a simulated terminal environment designed to showcase my skills and projects!",
+  "Feel free to explore and interact using terminal commands.",
+  "If you would rather view a traditional portfolio, type 'overview' and hit enter.",
+  "You can always return to the terminal by clicking the '>_Reactive Terminal' button in the overview mode.",
+  "I'll get you started with the 'help' command to show you available commands.",
 ];
 
 const helpLinesArray = [
@@ -121,19 +164,28 @@ const helpLinesArray = [
   "|",
   "| <name>  |  ./<name>  |  <name>.exe",
   "|     use any of the above to execute a section",
+  "|     (e.g. 'about', './projects', 'contact.exe')",
   "|",
   "| theme list",
   "|     list available color themes",
   "|",
   "| theme <name>",
   "|     apply a named theme",
+  "|     (e.g. 'theme light')",
   "|",
   "| theme <bg> <text> <prompt>",
   "|     apply custom hex colors",
+  "|     (e.g. 'theme #000000 #00ff00 #ffffff')",
+  "|",
   "| maze <size>",
   "|     generate & play an ASCII maze (size 10-50)",
+  "|    (e.g. 'maze 20', generates a 20x20 maze)",
+  "|",
   "| snake",
   "|     play ASCII Snake!",
+  "|",
+  "| overview",
+  "|     toggle a scrollable portfolio overview",
   "|",
   "| clear",
   "|     clear the terminal",
@@ -833,6 +885,96 @@ function closePanel() {
   currentSection = null;
 }
 
+function renderOverviewCards() {
+  if (!overviewGrid) return;
+  const cards = [
+    { key: "about", title: "About" },
+    { key: "history", title: "History" },
+    { key: "projects", title: "Projects" },
+    { key: "contact", title: "Contact" },
+  ];
+  const fragment = document.createDocumentFragment();
+  cards.forEach(({ key, title }) => {
+    const card = document.createElement("article");
+    card.className = "overview-card";
+    const heading = document.createElement("div");
+    heading.className = "overview-card-title";
+    heading.textContent = title;
+    const body = document.createElement("div");
+    body.className = "overview-card-body";
+    body.innerHTML = sections[key];
+    card.appendChild(heading);
+    card.appendChild(body);
+    fragment.appendChild(card);
+  });
+  overviewGrid.innerHTML = "";
+  overviewGrid.appendChild(fragment);
+}
+
+function activateOverviewMode() {
+  if (overviewActive) {
+    appendLine("overview already active.");
+    scrollToBottom();
+    return;
+  }
+
+  let abortedInteractive = false;
+  if (snakeGame) {
+    endSnakeGame({ reason: "abort" });
+    abortedInteractive = true;
+  }
+  if (mazeState) {
+    endMaze("abort");
+    abortedInteractive = true;
+  }
+  if (abortedInteractive) {
+    appendLine("interactive game aborted (overview mode activated).");
+    scrollToBottom();
+  }
+
+  overviewActive = true;
+  panelHiddenBeforeOverview = panel.classList.contains("hidden");
+  input.blur();
+  input.disabled = true;
+
+  if (terminal) {
+    terminal.classList.add("hidden");
+  }
+  panel.classList.add("hidden");
+  mainInteractiveContainer.classList.add("hidden");
+
+  renderOverviewCards();
+  if (overviewContainer) {
+    overviewContainer.classList.remove("hidden");
+  }
+
+  window.scrollTo(0, 0);
+}
+
+function deactivateOverviewMode() {
+  if (!overviewActive) return;
+  overviewActive = false;
+
+  if (overviewContainer) {
+    overviewContainer.classList.add("hidden");
+  }
+  if (overviewGrid) {
+    overviewGrid.innerHTML = "";
+  }
+
+  if (terminal) {
+    terminal.classList.remove("hidden");
+  }
+  if (!panelHiddenBeforeOverview) {
+    panel.classList.remove("hidden");
+  }
+  mainInteractiveContainer.classList.remove("hidden");
+
+  input.disabled = false;
+  input.focus();
+  scrollToBottom();
+}
+
 async function logAndRespond(raw, responseLines, charDelay = 10) {
   appendPromptLine(raw);
   await printLines(responseLines, charDelay);
@@ -1008,6 +1150,15 @@ async function handleCommand(rawInput) {
       await startSnakeGame();
       break;
 
+    case "overview":
+      if (overviewActive) {
+        await printLines(["overview already active."], 15);
+      } else {
+        await printLines(["entering overview mode..."], 15);
+        activateOverviewMode();
+      }
+      break;
+
     case "ls":
       await printLines(
         ["about.exe   projects.exe   contact.exe   history.exe"],
@@ -1058,10 +1209,23 @@ function handleHistoryNavigation(key) {
 
 function boot() {
   input.focus();
-  printLines(welcome, 25);
+  // print welcome message, wait to finish, then show help
+  printLines(welcome, 10).then(() => {
+    handleCommand("help");
+  });
+}
+
+if (overviewExitBtn) {
+  overviewExitBtn.addEventListener("click", () => {
+    deactivateOverviewMode();
+  });
 }
 
 input.addEventListener("keydown", async (event) => {
+  if (overviewActive) {
+    event.preventDefault();
+    return;
+  }
   if (mazeState || snakeGame) {
     event.preventDefault();
     return;
@@ -1087,6 +1251,7 @@ input.addEventListener("keydown", async (event) => {
 });
 
 document.addEventListener("click", (event) => {
+  if (overviewActive) return;
   if (event.target.closest("a")) return;
   input.focus();
 });
