@@ -156,6 +156,10 @@ const welcome = [
 
 const helpLinesArray = [
   "Available commands:",
+  "| overview",
+  "|     simplify the site by toggling a scrollable portfolio overview",
+  "|     run this command if you prefer a traditional portfolio layout",
+  "|",
   "| help",
   "|     show this help menu",
   "|",
@@ -183,9 +187,6 @@ const helpLinesArray = [
   "|",
   "| snake",
   "|     play ASCII Snake!",
-  "|",
-  "| overview",
-  "|     toggle a scrollable portfolio overview",
   "|",
   "| clear",
   "|     clear the terminal",
