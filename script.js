@@ -31,6 +31,7 @@ let historyIndex = -1;
 let currentSection = null;
 let snakeGame = null;
 let mazeState = null;
+let camState = null;
 let overviewActive = false;
 let panelHiddenBeforeOverview = true;
 
@@ -382,6 +383,232 @@ function runSteamLocomotive() {
       requestAnimationFrame(animate);
     });
   });
+}
+
+// --- ASCII Camera ----------------------------------------------------
+async function startAsciiCam() {
+  if (camState) {
+    appendLine("camera already active. Press ESC to stop.");
+    scrollToBottom();
+    return;
+  }
+
+  let abortedInteractive = false;
+  if (snakeGame) {
+    endSnakeGame({ reason: "abort" });
+    abortedInteractive = true;
+  }
+  if (mazeState) {
+    endMaze("abort");
+    abortedInteractive = true;
+  }
+  if (abortedInteractive) {
+    appendLine("previous interactive mode aborted.");
+    scrollToBottom();
+  }
+
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    appendLine("camera not supported in this browser.");
+    scrollToBottom();
+    return;
+  }
+
+  input.disabled = true;
+  input.blur();
+
+  let stream;
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ video: true });
+  } catch (error) {
+    appendLine("could not access camera (permission denied or error).");
+    input.disabled = false;
+    input.focus();
+    scrollToBottom();
+    return;
+  }
+
+  const video = document.createElement("video");
+  video.autoplay = true;
+  video.playsInline = true;
+  video.muted = true;
+  video.srcObject = stream;
+
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
+  if (!ctx) {
+    appendLine("camera not supported in this browser.");
+    stream.getTracks().forEach((track) => track.stop());
+    input.disabled = false;
+    input.focus();
+    scrollToBottom();
+    return;
+  }
+
+  const container = document.createElement("div");
+  container.className = "cam-container";
+  const note = document.createElement("div");
+  note.className = "cam-note";
+  note.textContent = "ASCII camera active — press ESC to exit.";
+  const asciiEl = document.createElement("pre");
+  asciiEl.className = "cam-ascii";
+  asciiEl.textContent = "initializing camera...";
+  container.appendChild(note);
+  container.appendChild(asciiEl);
+  output.appendChild(container);
+  scrollToBottom();
+
+  const baseWidth = Math.max(
+    40,
+    Math.min(
+      120,
+      Math.floor(((output && output.clientWidth) || 640) / 7)
+    )
+  );
+  const charAspect = 0.55; // characters are taller than they are wide
+  let sampleWidth = baseWidth;
+  let sampleHeight = Math.max(20, Math.round(baseWidth * charAspect));
+
+  const state = {
+    stream,
+    video,
+    canvas,
+    ctx,
+    asciiEl,
+    running: true,
+    animationFrameId: null,
+    keyHandler: null,
+    container,
+    sampleWidth,
+    sampleHeight,
+  };
+
+  const density = " .:-=+*#%@";
+  let lastFrameTime = 0;
+
+  const renderFrame = (ts = 0) => {
+    if (!camState || !camState.running) return;
+    if (ts - lastFrameTime < 66) {
+      camState.animationFrameId = requestAnimationFrame(renderFrame);
+      return;
+    }
+    lastFrameTime = ts;
+
+    const { sampleWidth: w, sampleHeight: h } = camState;
+    canvas.width = w;
+    canvas.height = h;
+
+    ctx.drawImage(video, 0, 0, w, h);
+    const { data } = ctx.getImageData(0, 0, w, h);
+
+    let ascii = "";
+    for (let y = 0; y < h; y++) {
+      let line = "";
+      for (let x = 0; x < w; x++) {
+        const idx = (y * w + x) * 4;
+        const r = data[idx];
+        const g = data[idx + 1];
+        const b = data[idx + 2];
+        const lum = 0.299 * r + 0.587 * g + 0.114 * b;
+        const charIdx = Math.min(
+          density.length - 1,
+          Math.floor((lum / 255) * (density.length - 1))
+        );
+        line += density[charIdx];
+      }
+      ascii += line;
+      if (y < h - 1) ascii += "\n";
+    }
+
+    asciiEl.textContent = ascii;
+    camState.animationFrameId = requestAnimationFrame(renderFrame);
+  };
+
+  const startRender = () => {
+    if (!camState || !camState.running) return;
+    renderFrame();
+  };
+
+  const keyHandler = (event) => {
+    if (!camState) return;
+    if (
+      [
+        "Escape",
+        "ArrowUp",
+        "ArrowDown",
+        "ArrowLeft",
+        "ArrowRight",
+      ].includes(event.key)
+    ) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    if (event.key === "Escape") {
+      stopAsciiCam();
+    }
+  };
+
+  state.keyHandler = keyHandler;
+  camState = state;
+  window.addEventListener("keydown", keyHandler, true);
+
+  const handleReady = () => {
+    const aspect =
+      video.videoHeight && video.videoWidth
+        ? video.videoHeight / video.videoWidth
+        : 0.75;
+    sampleHeight = Math.max(
+      20,
+      Math.round(baseWidth * aspect * charAspect)
+    );
+    camState.sampleWidth = sampleWidth;
+    camState.sampleHeight = sampleHeight;
+    video.width = video.videoWidth;
+    video.height = video.videoHeight;
+    startRender();
+  };
+
+  if (video.readyState >= 2) {
+    handleReady();
+  } else {
+    video.addEventListener("loadedmetadata", handleReady, { once: true });
+  }
+
+  try {
+    await video.play();
+  } catch (error) {
+    appendLine("could not access camera (permission denied or error).");
+    stopAsciiCam();
+  }
+}
+
+function stopAsciiCam() {
+  if (!camState) return;
+  const { stream, animationFrameId, keyHandler, container, video } = camState;
+
+  if (animationFrameId) {
+    cancelAnimationFrame(animationFrameId);
+  }
+  camState.running = false;
+
+  if (stream) {
+    stream.getTracks().forEach((track) => track.stop());
+  }
+  if (video) {
+    video.pause();
+    video.srcObject = null;
+  }
+  if (keyHandler) {
+    window.removeEventListener("keydown", keyHandler, true);
+  }
+  if (container && container.parentNode === output) {
+    container.remove();
+  }
+
+  camState = null;
+  input.disabled = false;
+  input.focus();
+  appendLine("ASCII camera stopped.");
+  scrollToBottom();
 }
 
 // --- Snake Game -------------------------------------------------------
@@ -1159,6 +1386,19 @@ async function handleCommand(rawInput) {
       await startSnakeGame();
       break;
 
+    case "cam": {
+      if (camState) {
+        await printLines(
+          ["camera already active. Press ESC to stop."],
+          10
+        );
+        break;
+      }
+      await printLines(["requesting camera access..."], 10);
+      await startAsciiCam();
+      break;
+    }
+
     case "overview":
       if (overviewActive) {
         await printLines(["overview already active."], 15);
@@ -1235,7 +1475,7 @@ input.addEventListener("keydown", async (event) => {
     event.preventDefault();
     return;
   }
-  if (mazeState || snakeGame) {
+  if (mazeState || snakeGame || camState) {
     event.preventDefault();
     return;
   }

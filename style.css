@@ -289,6 +289,31 @@ input:focus-visible {
   line-height: 1.1;
 }
 
+.cam-container {
+  margin: 0.75rem 0;
+  padding: 0.6rem;
+  border: 1px dashed color-mix(in srgb, var(--text-color) 50%, transparent);
+  background: color-mix(in srgb, var(--bg-color) 85%, transparent);
+  border-radius: 8px;
+}
+
+.cam-note {
+  font-family: var(--font);
+  color: color-mix(in srgb, var(--text-color) 70%, transparent);
+  margin-bottom: 0.35rem;
+  font-size: 0.9rem;
+}
+
+.cam-ascii {
+  margin: 0;
+  font-family: var(--font);
+  white-space: pre;
+  line-height: 0.8;
+  font-size: 8px;
+  overflow: hidden;
+  color: var(--text-color);
+}
+
 .snake-wrap {
   margin: 0.75rem 0;
   padding: 0.6rem;
