@@ -459,12 +459,9 @@ async function startAsciiCam() {
 
   const baseWidth = Math.max(
     40,
-    Math.min(
-      120,
-      Math.floor(((output && output.clientWidth) || 640) / 7)
-    )
+    Math.min(220, Math.floor(((output && output.clientWidth) || 640) / 5))
   );
-  const charAspect = 0.55; // characters are taller than they are wide
+  const charAspect = 0.55; // attempt to square characters
   let sampleWidth = baseWidth;
   let sampleHeight = Math.max(20, Math.round(baseWidth * charAspect));
 
@@ -480,13 +477,24 @@ async function startAsciiCam() {
     container,
     sampleWidth,
     sampleHeight,
+    bgSnapshot: null,
+    bgLum: null,
+    bgActive: false,
+    lastLines: null,
+    lastLum: null,
+    snapshotWidth: null,
+    snapshotHeight: null,
+    lumThreshold: 25,
   };
 
-  const density = " .:-=+*#%@";
+  const density =
+    " .'`^,:;Il!i><~+_-?][}{1)(|/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$";
   let lastFrameTime = 0;
 
   const renderFrame = (ts = 0) => {
     if (!camState || !camState.running) return;
+
+    // ~15 fps
     if (ts - lastFrameTime < 66) {
       camState.animationFrameId = requestAnimationFrame(renderFrame);
       return;
@@ -500,32 +508,114 @@ async function startAsciiCam() {
     ctx.drawImage(video, 0, 0, w, h);
     const { data } = ctx.getImageData(0, 0, w, h);
 
-    let ascii = "";
+    const lines = [];
+    const frameLum = [];
+
     for (let y = 0; y < h; y++) {
       let line = "";
+      const lumRow = [];
+
       for (let x = 0; x < w; x++) {
         const idx = (y * w + x) * 4;
         const r = data[idx];
         const g = data[idx + 1];
         const b = data[idx + 2];
-        const lum = 0.299 * r + 0.587 * g + 0.114 * b;
+
+        // perceptual luminance formula
+        const lum = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+        lumRow.push(lum);
+
         const charIdx = Math.min(
           density.length - 1,
           Math.floor((lum / 255) * (density.length - 1))
         );
         line += density[charIdx];
       }
-      ascii += line;
-      if (y < h - 1) ascii += "\n";
+
+      lines.push(line);
+      frameLum.push(lumRow);
     }
 
-    asciiEl.textContent = ascii;
+    camState.lastLines = lines;
+    camState.lastLum = frameLum;
+
+    let displayLines = lines;
+
+    // ---- Foreground isolation using luminance change analysis ----
+    if (camState.bgActive && camState.bgSnapshot && camState.bgLum) {
+      // If resolution changed since snapshot, invalidate background
+      if (
+        camState.snapshotWidth !== camState.sampleWidth ||
+        camState.snapshotHeight !== camState.sampleHeight
+      ) {
+        camState.bgSnapshot = null;
+        camState.bgLum = null;
+        camState.bgActive = false;
+        camState.snapshotWidth = null;
+        camState.snapshotHeight = null;
+      } else {
+        const bgLines = camState.bgSnapshot;
+        const bgLum = camState.bgLum;
+        const threshold = camState.lumThreshold ?? 25;
+
+        const outLines = [];
+
+        for (let y = 0; y < h; y++) {
+          const row = lines[y];
+          const lumRow = frameLum[y];
+          const bgLumRow = bgLum[y];
+          let outRow = "";
+
+          for (let x = 0; x < row.length; x++) {
+            const ch = row[x] || " ";
+            const currLum = lumRow[x];
+            const prevLum = bgLumRow[x];
+
+            // If luminance hasn't changed much, treat as background
+            if (Math.abs(currLum - prevLum) < threshold) {
+              outRow += " ";
+            } else {
+              outRow += ch;
+            }
+          }
+          //
+          outRow = outRow.split("").reverse().join("");
+          outLines.push(outRow);
+        }
+
+        displayLines = outLines;
+      }
+    }
+
+    asciiEl.textContent = displayLines.join("\n");
     camState.animationFrameId = requestAnimationFrame(renderFrame);
   };
 
   const startRender = () => {
     if (!camState || !camState.running) return;
     renderFrame();
+  };
+
+  const captureBackground = () => {
+    if (!camState || !camState.lastLines || !camState.lastLum) return;
+    camState.bgSnapshot = camState.lastLines.slice();
+    camState.bgLum = camState.lastLum.map((row) => row.slice());
+    camState.snapshotWidth = camState.sampleWidth;
+    camState.snapshotHeight = camState.sampleHeight;
+    camState.bgActive = true;
+    appendLine("background snapshot captured.");
+    scrollToBottom();
+  };
+
+  const clearBackground = () => {
+    if (!camState) return;
+    camState.bgSnapshot = null;
+    camState.bgLum = null;
+    camState.bgActive = false;
+    camState.snapshotWidth = null;
+    camState.snapshotHeight = null;
+    appendLine("background snapshot cleared.");
+    scrollToBottom();
   };
 
   const keyHandler = (event) => {
@@ -537,6 +627,10 @@ async function startAsciiCam() {
         "ArrowDown",
         "ArrowLeft",
         "ArrowRight",
+        "b",
+        "B",
+        "r",
+        "R",
       ].includes(event.key)
     ) {
       event.preventDefault();
@@ -544,6 +638,15 @@ async function startAsciiCam() {
     }
     if (event.key === "Escape") {
       stopAsciiCam();
+      return;
+    }
+    if (event.key === "b" || event.key === "B") {
+      captureBackground();
+      return;
+    }
+    if (event.key === "r" || event.key === "R") {
+      clearBackground();
+      return;
     }
   };
 
@@ -556,10 +659,7 @@ async function startAsciiCam() {
       video.videoHeight && video.videoWidth
         ? video.videoHeight / video.videoWidth
         : 0.75;
-    sampleHeight = Math.max(
-      20,
-      Math.round(baseWidth * aspect * charAspect)
-    );
+    sampleHeight = Math.max(20, Math.round(baseWidth * aspect * charAspect));
     camState.sampleWidth = sampleWidth;
     camState.sampleHeight = sampleHeight;
     video.width = video.videoWidth;
@@ -1388,10 +1488,7 @@ async function handleCommand(rawInput) {
 
     case "cam": {
       if (camState) {
-        await printLines(
-          ["camera already active. Press ESC to stop."],
-          10
-        );
+        await printLines(["camera already active. Press ESC to stop."], 10);
         break;
       }
       await printLines(["requesting camera access..."], 10);
