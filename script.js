@@ -91,6 +91,10 @@ const sections = {
         </ul>
         <a href="https://github.com/RyLanning/sudo-hire-rylen" target="_blank" aria-label="View this project on GitHub">View on GitHub</a>
       </div>
+      <div class="project-card">
+        <strong>More to come....</strong>
+        <p>This obviously isn't the only thing I've made! I have more on my github, but haven't put them on this website yet.</p>
+      </div>
     </div>
   `,
   contact: `
