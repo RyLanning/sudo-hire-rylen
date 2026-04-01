@@ -158,7 +158,7 @@ const helpLinesArray = [
   "| snake",
   "|     play ASCII Snake!",
   "|",
-  "| asciicam",
+  "| cam",
   "|     activate your webcam and render in ASCII art",
   "|",
   "| clear",
