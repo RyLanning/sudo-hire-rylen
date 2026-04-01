@@ -54,9 +54,9 @@ const sections = {
       I'm always excited to take on new challenges and collaborate with others to create innovative and impactful software solutions.
     </p>
     <p>
-      When I'm not coding, I enjoy hiking, photography, board games, videogames, and spending time with friends and family.
+      When I'm not coding, I enjoy hiking, photography, board games, video games, and spending time with friends and family.
       I love games and puzzles that challenge my problem-solving skills, and I often find inspiration for my development work
-      from game design principles. My desk is always covered in rubix cubes and puzzle toys!
+      from game design principles. My desk is always covered in Rubik's cubes and puzzle toys!
     </p>
     <p>
       I've worked with a ton of different technologies over the years in various domains, and I'm always eager to learn more!
@@ -91,36 +91,6 @@ const sections = {
         </ul>
         <a href="https://github.com/RyLanning/sudo-hire-rylen" target="_blank" aria-label="View this project on GitHub">View on GitHub</a>
       </div>
-      <div class="project-card">
-        <strong>This Website</strong>
-        <p>You're lookin at it! Here's some hidden features if you haven't discovered them yet.</p>
-        <ul>
-          <li>Try the command: <code>sl</code> for a fun easter egg!</li>
-          <li>Randomize the color theme with the <code>theme random</code> command. Beware - it's not guaranteed to look good!</li>
-          <li>Use <code>whoami</code> to see a fun response.</li>
-        </ul>
-        <a href="https://github.com/RyLanning/sudo-hire-rylen" target="_blank" aria-label="View this project on GitHub">View on GitHub</a>
-      </div>
-      <div class="project-card">
-        <strong>This Website</strong>
-        <p>You're lookin at it! Here's some hidden features if you haven't discovered them yet.</p>
-        <ul>
-          <li>Try the command: <code>sl</code> for a fun easter egg!</li>
-          <li>Randomize the color theme with the <code>theme random</code> command. Beware - it's not guaranteed to look good!</li>
-          <li>Use <code>whoami</code> to see a fun response.</li>
-        </ul>
-        <a href="https://github.com/RyLanning/sudo-hire-rylen" target="_blank" aria-label="View this project on GitHub">View on GitHub</a>
-      </div>
-      <div class="project-card">
-        <strong>This Website</strong>
-        <p>You're lookin at it! Here's some hidden features if you haven't discovered them yet.</p>
-        <ul>
-          <li>Try the command: <code>sl</code> for a fun easter egg!</li>
-          <li>Randomize the color theme with the <code>theme random</code> command. Beware - it's not guaranteed to look good!</li>
-          <li>Use <code>whoami</code> to see a fun response.</li>
-        </ul>
-        <a href="https://github.com/RyLanning/sudo-hire-rylen" target="_blank" aria-label="View this project on GitHub">View on GitHub</a>
-      </div>
     </div>
   `,
   contact: `
@@ -128,14 +98,13 @@ const sections = {
     <div class="contact-links">
       <div class="contact-link"><a href="mailto:rylen.lanning@gmail.com">✉️ rylen.lanning@gmail.com</a></div>
       <div class="contact-link"><a href="https://github.com/RyLanning" target="_blank" rel="noreferrer noopener">GitHub Profile</a></div>
-      <div class="contact-link"><a href="https://www.linkedin.com/" target="_blank" rel="noreferrer noopener">LinkedIn</a></div>
     </div>
-  `,
+      `,
+    // <div class="contact-link"><a href="https://www.linkedin.com/" target="_blank" rel="noreferrer noopener">LinkedIn</a></div>
   history: `
     <div class="timeline">
-      <div class="timeline-item"><strong>2000 - 2000</strong><br/>TODO: ADD HISTORY</div>
       <div class="timeline-item"><strong>Aug. 2023 - Current</strong>
-      <br/>SE</div>
+      <br/>Software Engineer at Data Security, Inc.</div>
       <div class="timeline-item"><strong>Jan. 2023 - Aug. 2023</strong>
       <br/>Head Host at Lazlo's restaurant. Fun times!</div>
       <div class="timeline-item"><strong>Aug. 2019 - Jan. 2023</strong>
@@ -188,6 +157,9 @@ const helpLinesArray = [
   "|",
   "| snake",
   "|     play ASCII Snake!",
+  "|",
+  "| asciicam",
+  "|     activate your webcam and render in ASCII art",
   "|",
   "| clear",
   "|     clear the terminal",
@@ -1348,7 +1320,7 @@ async function handleCommand(rawInput) {
 
   switch (lowerCmd) {
     case "help":
-      await printLines(helpLinesArray, 20);
+      await printLines(helpLinesArray, 3);
       break;
 
     case "theme": {
